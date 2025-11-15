@@ -44,7 +44,10 @@
         <!-- All Tutorials Grid -->
         <h2 class="section-header">Latest Tutorials</h2>
         <div class="tutorials-grid">
-            {% for tutorial in tutorials[1:] if tutorials|length > 1 else tutorials %}
+            {% if tutorials|length > 1 %}
+                {% for tutorial in tutorials[1:] %}
+            {% else %}
+                {% for tutorial in tutorials %}
                 <div class="card h-100 tutorial-card">
                     <div style="overflow: hidden; position: relative;">
                         {% if tutorial['image_path'] %}
@@ -64,7 +67,8 @@
                         <a href="{{ url_for('tutorial', slug=tutorial['slug']) }}" class="btn btn-primary mt-auto">Read More</a>
                     </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            {% endif %}
         </div>
     {% else %}
         <div class="alert alert-info" style="animation: fadeIn 1s ease-out;">
