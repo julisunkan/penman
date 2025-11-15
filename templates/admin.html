@@ -7,6 +7,24 @@
     <h1 class="mb-4">Admin Panel</h1>
     <p class="text-muted">Manage your tutorials here</p>
     
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Scrape New Tutorial</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('scrape_url') }}">
+                <div class="mb-3">
+                    <label for="url" class="form-label">Enter Tutorial URL</label>
+                    <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com/tutorial" required>
+                    <div class="form-text">Enter the URL of a tutorial to scrape and add to the database.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Scrape Tutorial</button>
+            </form>
+        </div>
+    </div>
+    
+    <h2 class="mb-3">Existing Tutorials</h2>
+    
     {% if tutorials %}
         <div class="table-responsive">
             <table class="table table-striped table-hover">

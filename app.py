@@ -2,9 +2,21 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 import sqlite3
 import os
 from database import init_db, get_db_connection
+from scraper import scrape_tutorial
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
+
+ALLOWED_DOMAINS = [
+    'hackingarticles.in',
+    'www.hackingarticles.in',
+    'cybersecuritynews.com',
+    'www.cybersecuritynews.com',
+    'hackthebox.com',
+    'www.hackthebox.com',
+    'tryhackme.com',
+    'www.tryhackme.com',
+]
 
 init_db()
 
@@ -87,6 +99,68 @@ def delete(tutorial_id):
         flash('Tutorial not found', 'error')
     
     conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/scrape', methods=['POST'])
+def scrape_url():
+    url = request.form.get('url')
+    
+    if not url:
+        flash('Please provide a URL', 'error')
+        return redirect(url_for('admin'))
+    
+    from urllib.parse import urlparse
+    import socket
+    import ipaddress
+    
+    try:
+        parsed_url = urlparse(url)
+        
+        if parsed_url.scheme not in ['http', 'https']:
+            flash('Invalid URL scheme. Only HTTP and HTTPS URLs are allowed.', 'error')
+            return redirect(url_for('admin'))
+        
+        hostname = parsed_url.hostname
+        if not hostname:
+            flash('Invalid URL format.', 'error')
+            return redirect(url_for('admin'))
+        
+        if hostname.lower() not in ALLOWED_DOMAINS:
+            flash(f'Domain not allowed. Allowed domains: {", ".join(ALLOWED_DOMAINS)}', 'error')
+            return redirect(url_for('admin'))
+        
+        try:
+            addr_info = socket.getaddrinfo(hostname, None)
+        except socket.gaierror:
+            flash('Could not resolve hostname. Please check the URL.', 'error')
+            return redirect(url_for('admin'))
+        
+        validated_ip = None
+        for addr in addr_info:
+            ip_str = addr[4][0]
+            try:
+                ip = ipaddress.ip_address(ip_str)
+                if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+                    flash('Cannot scrape from private, loopback, or reserved IP addresses.', 'error')
+                    return redirect(url_for('admin'))
+                if validated_ip is None and ip.version == 4:
+                    validated_ip = ip_str
+            except ValueError:
+                flash('Invalid IP address resolved from hostname.', 'error')
+                return redirect(url_for('admin'))
+        
+        if not validated_ip:
+            flash('No valid IPv4 address found for hostname.', 'error')
+            return redirect(url_for('admin'))
+        
+        success = scrape_tutorial(url, pinned_ip=validated_ip)
+        if success:
+            flash(f'Tutorial scraped successfully from {url}!', 'success')
+        else:
+            flash(f'Failed to scrape tutorial from {url}. Please check the URL and try again.', 'error')
+    except Exception as e:
+        flash(f'Error scraping tutorial: {str(e)}', 'error')
+    
     return redirect(url_for('admin'))
 
 if __name__ == '__main__':

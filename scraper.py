@@ -4,15 +4,39 @@ import os
 import re
 import bleach
 from database import get_db_connection
+from requests.adapters import HTTPAdapter
+from urllib3.util.connection import create_connection
+from urllib.parse import urlparse
 
 def sanitize_filename(filename):
     filename = re.sub(r'[^\w\s-]', '', filename)
     filename = re.sub(r'[-\s]+', '-', filename)
     return filename.strip('-').lower()
 
-def download_image(img_url, save_path):
+def download_image(img_url, save_path, pinned_ip=None):
     try:
-        response = requests.get(img_url, timeout=10)
+        if pinned_ip:
+            session = requests.Session()
+            parsed = urlparse(img_url)
+            
+            original_create_connection = create_connection
+            
+            def patched_create_connection(address, *args, **kwargs):
+                host, port = address
+                if host == parsed.hostname:
+                    return original_create_connection((pinned_ip, port), *args, **kwargs)
+                return original_create_connection(address, *args, **kwargs)
+            
+            import urllib3.util.connection
+            urllib3.util.connection.create_connection = patched_create_connection
+            
+            try:
+                response = session.get(img_url, timeout=10, allow_redirects=False)
+            finally:
+                urllib3.util.connection.create_connection = original_create_connection
+        else:
+            response = requests.get(img_url, timeout=10, allow_redirects=False)
+        
         if response.status_code == 200:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             with open(save_path, 'wb') as f:
@@ -22,9 +46,30 @@ def download_image(img_url, save_path):
         print(f"Error downloading image: {e}")
     return False
 
-def scrape_tutorial(url):
+def scrape_tutorial(url, pinned_ip=None):
     try:
-        response = requests.get(url, timeout=15)
+        if pinned_ip:
+            session = requests.Session()
+            parsed = urlparse(url)
+            
+            original_create_connection = create_connection
+            
+            def patched_create_connection(address, *args, **kwargs):
+                host, port = address
+                if host == parsed.hostname:
+                    return original_create_connection((pinned_ip, port), *args, **kwargs)
+                return original_create_connection(address, *args, **kwargs)
+            
+            import urllib3.util.connection
+            urllib3.util.connection.create_connection = patched_create_connection
+            
+            try:
+                response = session.get(url, timeout=15, allow_redirects=False)
+            finally:
+                urllib3.util.connection.create_connection = original_create_connection
+        else:
+            response = requests.get(url, timeout=15, allow_redirects=False)
+        
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
         
@@ -63,7 +108,7 @@ def scrape_tutorial(url):
             img_filename = f"{slug}.jpg"
             save_path = os.path.join('static', 'images', 'tutorial_images', img_filename)
             
-            if download_image(img_url, save_path):
+            if download_image(img_url, save_path, pinned_ip=pinned_ip):
                 image_path = f'images/tutorial_images/{img_filename}'
         
         html_filename = f"{slug}.html"

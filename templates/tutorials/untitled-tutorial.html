@@ -1,0 +1,15 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h1>{{ tutorial['title'] }}</h1>
+    {% if tutorial['image_path'] %}
+    <img src="{{ url_for('static', filename=tutorial['image_path']) }}" class="img-fluid mb-4" alt="{{ tutorial['title'] }}">
+    {% endif %}
+    <div class="tutorial-content">
+        <div><p>Content could not be extracted.</p></div>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{% endblock %}
