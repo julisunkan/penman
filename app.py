@@ -157,7 +157,7 @@ def scrape_url():
         if success:
             flash(f'Tutorial scraped successfully from {url}!', 'success')
         else:
-            flash(f'Failed to scrape tutorial from {url}. Please check the URL and try again.', 'error')
+            flash(f'Failed to scrape tutorial from {url}. It may already exist or the content could not be extracted. Check the console for details.', 'error')
     except Exception as e:
         flash(f'Error scraping tutorial: {str(e)}', 'error')
     

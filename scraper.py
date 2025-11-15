@@ -15,9 +15,14 @@ def sanitize_filename(filename):
 
 def download_image(img_url, save_path, pinned_ip=None):
     try:
+        # Skip images from external CDNs when using IP pinning to avoid SSL issues
+        parsed = urlparse(img_url)
+        if pinned_ip and parsed.hostname and 'googleusercontent.com' in parsed.hostname:
+            print(f"Skipping external CDN image: {img_url}")
+            return False
+            
         if pinned_ip:
             session = requests.Session()
-            parsed = urlparse(img_url)
             
             original_create_connection = create_connection
             
@@ -31,7 +36,7 @@ def download_image(img_url, save_path, pinned_ip=None):
             urllib3.util.connection.create_connection = patched_create_connection
             
             try:
-                response = session.get(img_url, timeout=10, allow_redirects=False)
+                response = session.get(img_url, timeout=10, allow_redirects=False, verify=True)
             finally:
                 urllib3.util.connection.create_connection = original_create_connection
         else:
@@ -137,6 +142,14 @@ def scrape_tutorial(url, pinned_ip=None):
             f.write(tutorial_template)
         
         conn = get_db_connection()
+        
+        # Check if tutorial with this slug already exists
+        existing = conn.execute('SELECT id FROM tutorials WHERE slug = ?', (slug,)).fetchone()
+        if existing:
+            conn.close()
+            print(f"Tutorial with slug '{slug}' already exists. Skipping.")
+            return False
+        
         conn.execute(
             'INSERT INTO tutorials (title, description, slug, image_path, html_filename) VALUES (?, ?, ?, ?, ?)',
             (title_text, description, slug, image_path, html_filename)
