@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center text-white py-5">
+        <h1 class="display-4">Network Penetration Testing Guides</h1>
+        <p class="lead">Learn ethical hacking and penetration testing techniques</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <h2 class="mb-4">Available Tutorials</h2>
+    
+    {% if tutorials %}
+        <div class="row">
+            {% for tutorial in tutorials %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 tutorial-card">
+                        {% if tutorial['image_path'] %}
+                            <img src="{{ url_for('static', filename=tutorial['image_path']) }}" 
+                                 class="card-img-top" 
+                                 alt="{{ tutorial['title'] }}">
+                        {% else %}
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-white">No Image</span>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ tutorial['title'] }}</h5>
+                            <p class="card-text flex-grow-1">{{ tutorial['description'][:150] }}...</p>
+                            <a href="{{ url_for('tutorial', slug=tutorial['slug']) }}" class="btn btn-primary mt-auto">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No tutorials available yet!</h4>
+            <p>Run the scraper to add tutorials to the database.</p>
+            <p>From the terminal, run: <code>python scraper.py</code></p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
