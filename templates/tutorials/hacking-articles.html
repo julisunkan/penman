@@ -1,0 +1,156 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h1>{{ tutorial['title'] }}</h1>
+    {% if tutorial['image_path'] %}
+    <img src="{{ url_for('static', filename=tutorial['image_path']) }}" class="img-fluid mb-4" alt="{{ tutorial['title'] }}">
+    {% endif %}
+    <div class="tutorial-content">
+        
+<div>
+<div>
+<div>
+<span><a href="https://www.hackingarticles.in/category/red-teaming/">Red Teaming</a></span> </div>
+<h1>Netexec for Pentester: File Transfer</h1> <div>
+<div>
+<span><a href="https://www.hackingarticles.in/netexec-for-pentester-file-transfer/">October 17, 2025October 17, 2025</a></span><span> by <span><a href="https://www.hackingarticles.in/author/raj/">Raj</a></span></span> </div>
+</div>
+<div>
+<p><span><strong>NetExec (NXC)</strong> file transfer is a must‑know technique for pentesters and red teamers who need reliable, cross‑protocol methods to move payloads, exfiltrate data, or stage tooling. Using a single, modular interface, NXC lets you transfer files over <strong>SSH, FTP, NFS, </strong>and<strong> MS‑SQL</strong> with the same command syntax making it faster to pivot between hosts and protocols during engagement. While SCP and SMB remain staples, <strong>NXC’s</strong> unified approach simplifies automation and scripting, but also highlights how misconfigured services <strong>(anonymous FTP, overly permissive NFS exports, database file functions)</strong> can turn routine transfers into serious security incidents. This guide walks through practical <strong>NXC</strong> commands, attack scenarios, and defensive controls so you can leverage file transfer powerfully and securely.</span></p>
+<h3><span><strong>Table of Content</strong></span></h3>
+<ul>
+<li><span>Overview</span></li>
+<li><span>Prerequisites</span></li>
+<li><span>SSH</span></li>
+<li>FTP</li>
+<li>NFS</li>
+<li>MS-SQL</li>
+<li><span>Mitigation</span></li>
+<li>Conclusion</li>
+</ul>
+<h3><span><strong> </strong><strong>Overview</strong></span></h3>
+<p><span>Every file you upload or download tells a story. For a pentester:</span></p>
+<ul>
+<li><span>It could be <strong>dropping reconnaissance scripts</strong> or <strong>extracting password files</strong>.</span></li>
+<li><span>For a defender, these same steps represent <strong>lateral movement</strong>, <strong>data theft</strong>, or <strong>persistence</strong>.</span></li>
+</ul>
+<p><span>Attackers frequently exploit legitimate services (like SSH or FTP) to move files quietly within a compromised network. Understanding these methods helps both <strong>offensive and defensive teams</strong> detect misuse and strengthen configurations before attackers exploit them.</span></p>
+<ul>
+<li><span>SSH Put/Get → Encrypted, authenticated file transfers (SCP/SFTP) used to stealthily stage tools, move payloads, or exfiltrate data while preserving confidentiality and integrity.</span></li>
+<li><span>FTP Put/Get → Legacy, often unencrypted protocol (may allow anonymous access) used to upload/download web shells or data; frequently abused when misconfigured or weakly authenticated.</span></li>
+<li><span>NFS LS/Get/Put → Network shares that present remote directories as local; permissive exports let attackers read sensitive files, plant persistence artifacts, or move laterally.</span></li>
+<li><span>MS‑SQL Put/Get → Database‑driven file I/O (BULK INSERT/OPENROWSET, CLR, xp_cmdshell etc.) that lets attackers pivot from DB privileges to OS file access for staging or exfiltration.</span></li>
+</ul>
+<p><span>File transfers look simple but are dangerously powerful: misconfigured SSH, FTP, NFS or MS‑SQL services let attackers stage payloads, exfiltrate secrets, or pivot to the OS with minimal fuss.</span><br>
+<span>Bottom line — it’s not just the file: it’s who can move it, where it lands, and what processes can read or run it; enforce least privilege, centralize logging, and monitor unusual transfers to reduce the risk.</span></p>
+<h3><span><strong><span>Prerequisite</span> </strong></span></h3>
+<ul>
+<li><span>Kali Linux packed with tools</span></li>
+<li><span>Tools: NXC</span></li>
+</ul>
+<h3><span><strong>SSH: SCP/SFTP style operations (typical Linux hosts)</strong></span></h3>
+<p><span>SSH remains one of the most secure and versatile remote management protocols. However, weak credentials or misconfigurations can make it an easy target.</span></p>
+<p><span><strong>When attackers favor SSH</strong></span></p>
+<ul>
+<li><span>Valid credentials or SSH keys are available (phished, reused, brute).</span></li>
+<li><span>Target is a Linux host or network device supporting SCP/SFTP.</span></li>
+<li><span>Encrypted channel reduces network detection compared to cleartext FTP.</span></li>
+</ul>
+<p><span><strong>Upload a local file to target</strong></span></p>
+<pre>nxc ssh 192.168.1.3 -u pentest -p 123 --put-file file.txt /tmp/file.txt</pre>
+<p><span><strong> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi17mqeSPlivga5Kosn2HDWp7Wnl1Trylu0DRRYc54SejoTnznfV5LjwQz98q-m3TWPQDB-ZZGZySvMwC9P4CPW_j32zqjRvfrGfUWrz5Mkl7fwKYH1_MUAwgGSyBgV7F1dfAtDGTakcPyglXbksFrv2NMHkf2mqNNpOwJQuWW8TX_XjYrc1Wt5GSmLvqJR/s16000/1.png"></strong></span></p>
+<p><span>Uploads the local file file.txt to /tmp/file.txt on the remote host using SSH for authentication; while this is a common administrative technique for staging tools or moving data for execution, exfiltration, or persistence, it can be abused; especially with weak or reused credentials—to enable unauthorized code execution and lateral movement.</span></p>
+<p><span><strong>Download remote file</strong></span></p>
+<pre>nxc ssh 192.168.1.3 -u pentest -p 123  --get-file /etc/passwd passwd</pre>
+<p><span>Retrieve the remote /etc/passwd and save it locally as passwd to enumerate users, UIDs/GIDs, and shells for reconnaissance; ensure this action is authorized and logged, and treat more sensitive files (for example /etc/shadow, sshd_config, user home directories, and authentication logs) with stricter controls because their exfiltration can enable privilege escalation and should trigger alerts for unusual system‑file downloads or unexpected SCP/SFTP GETs.</span></p>
+<p><span><strong> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjDAxYtThg7xwoqMT3sOH3iEqkA04jxASpO1ZiyNczSGjp4YBHQHwxoopZqlaZkFp4EBtkkM8PI27DXS2cy3DNR1vv1XpDifOTOeaaLAWpZGFgkSIQ1fVOP0hja6keMI7NnZHGXG_z6qQEn9z0cUjHedtDbm2Sz28_NYUhqe_LuDr3HPM2KjwNj1ikACYTT/s16000/2.png"></strong></span></p>
+<h3><span><strong>FTP: legacy but still common (appliances, backup targets)</strong></span></h3>
+<p><span><em>FTP is often plaintext and legacy — it’s commonly abused where still enabled.</em></span></p>
+<p><span><strong>When attackers favor FTP</strong></span></p>
+<ul>
+<li><span>Embedded devices, legacy servers offering FTP (sometimes anonymous).</span></li>
+<li><span>FTP is cleartext (unless FTPS) so network IDS can detect content — but many orgs don’t actively monitor FTP activity.</span></li>
+</ul>
+<p><span><strong>Uploads</strong></span></p>
+<pre>nxc ftp 192.168.1.3 -u pentest -p 123 --put file.txt file.txt</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi05x0iznZE7fIjUpYsrTfa3cfJePVMBZ0YbJAg2UtoCgUMkpM_Tog1doI65vbt4XBKgK3gvBJHHo-v_A8SDSh1-4dXfrvdvuu-b3fkniwI0Ci1g3c_MzfrmH6hQdVjIV94eaHeSS6JzAsemFpTNmmSQafWMO-pPBAmsVhDzRUGbyLDNHkXe0ZPTtjH4ni4/s16000/3.png"></p>
+<p><span>This connects to an FTP server to upload file.txt, saving it as file.txt on the remote server for authorized file transfer. Although convenient, FTP uploads carry risks such as arbitrary file uploads (including webshells), manipulation of served content, and potential data exfiltration.</span></p>
+<p><span><strong>Download</strong></span></p>
+<pre>nxc ftp 192.168.1.3 -u pentest -p 123 --get /etc/passwd</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhuJOshJ4JANtsmFeJYhlY3H7MIh5ffpZ4xt96zaz0mUg26h3HmoP7XLWUqYLD4xmEuxBCoKIgIGAOeKPPQsRvmEZRyaYHD4YC5BxzA7Pb3q2UAdTX1DTxKIilzonqAilrJp_1I7FX7l0UXWOs-BvHs8bWf0Ty-qNT7nI90VRUS5m9Q0hfqva4_Yr4OOmE4/s16000/4.png"></p>
+<p><span>This retrieves the remote /etc/passwd from an FTP server to the local host for reconnaissance and user enumeration. If the FTP daemon has excessive filesystem privileges or is misconfigured, it can let attackers exfiltrate sensitive host files.</span></p>
+<h3><span><strong>NFS: direct filesystem access across network</strong></span></h3>
+<p><span><em>NFS exposes filesystem-level access across the network and is frequently misconfigured.</em></span></p>
+<p><span><strong>When attackers favor NFS</strong></span></p>
+<ul>
+<li><span>Misconfigured exports (e.g., export / or /etc to wide ranges).</span></li>
+<li><span>Internal networks where hosts mount NFS shares; attackers can read system files if exports are permissive.</span></li>
+</ul>
+<p><span><strong>List root export</strong></span></p>
+<pre>nxc nfs 192.168.1.3 --ls '/'</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7GREKeY_LaHlFxJZpfpbSeSk5aYmK4v_8EGK_8oZV05ufbgiArfI-IgnN7agQITJiTgJs07tohvT2vv7vkapYbC12zRKYc71udpOhxe_54ZIF1nd_UYjWhYaKDUdhwLYd8C4F-XBDyljRy-Wv9aYX3JfBbG9jYKZpDcehRneQr49wXruXfXEOwr_uyjvl/s16000/5.png"></p>
+<p><span>This queries the root of an NFS export to identify accessible shares and determine whether mounts are writable; a perfect reconnaissance step that can reveal paths for data theft or payload staging. This reveals exported paths and writable mounts that may expose sensitive data or allow file planting; configurations that disable no_root_squash or permit wide write access are especially dangerous.</span></p>
+<p><span><strong>Download</strong></span></p>
+<pre>nxc nfs 192.168.1.3 --get /etc/shadow</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg60khhcggPzCnZeF_QAotZHhwGoHRoRX3tJkBDj0tzO_arD4Og-oqNwTt-j7IaEzZSvdgDfFNqWLFEKXluFRXPDANWNSTqJ4RVoDrD9fw1ZfYvMLuiW-nb8m7H0NqAIixCNk2DG4gCu8DDzvp_FPkwjnObPBkyorjf3JyDuK-4zyvbn6vJynjo-BB7UkLS/s16000/6.png"></p>
+<p><span>This attempts to obtain /etc/shadow from an NFS export to steal password hashes; NFS misconfigurations that expose system directories can allow this, so such access must be blocked, logged, and tightly controlled.</span></p>
+<p><span><strong>Upload</strong></span></p>
+<pre>nxc nfs 192.168.1.3 --put-file file.txt /mnt/file.txt</pre>
+<p><span>Uploads file.txt to the NFS export at /mnt/file.txt to place persistence artifacts or executable payloads; writable exports can be abused to maintain access or pivot to other hosts.</span></p>
+<p><span><strong> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhEr3IMZRafuOKxm50vej_Lgk5JMYY4254Y_KWVS5WM5P2T0J-rhLtrrxvThiKw09OWRRun7LQmbGLdp12ZCIsB7N4qxubdgf1sll9DoXybsGGiAUlijiz-W_Cheu5F70KWIV8mSs5ocCvjoaKtZw7CCziidyAg2NvYZOxYwRFmyg6vlY-fHR5MQBWvE8rV/s16000/7.png"></strong></span></p>
+<h3><span><strong>MS-SQL: DB file APIs and server-side file I/O (Windows hosts)</strong></span></h3>
+<p><span><em>MS-SQL servers often run under highly privileged service accounts and can access the filesystem via SQL Server features.</em></span></p>
+<p><span><strong>When attackers favor MS-SQL file primitives</strong></span></p>
+<ul>
+<li><span>DB accounts with privileges to write to disk (BULK APIs, xp_cmdshell or CLR) can stage or retrieve files on Windows hosts.</span></li>
+<li><span>Useful on Windows environments where SQL Server service runs as a privileged account.</span></li>
+</ul>
+<p><span><strong>Upload a file as SQL</strong></span></p>
+<pre>nxc mssql 192.168.1.8 -u sa -p 'Ignite@987' --put-file file.txt C:\\users\\public\\file.txt --local-auth</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhbjB-llg7rdwbap_MGMr2WP5CprnyfUGbE20NlOgNM1IpNEvGgnfMQjpALm1DGaJ-zWCUe8rWZOFXjR7X3NSnctP3_i8lv3jovYl1vka4xdjqcQB9Vcu8oLj5_gDiU2MwU2ixj9T-SgIis0G6efL2hD9pB3XyEsc-NFI-WH-6bEP6lqagxeRGr_W0-0q3R/s16000/8.png"></p>
+<p><span>Uses MS‑SQL access (for example, the sa account) to write file.txt to C:\Users\Public\file.txt on the Windows host. Attackers abuse database capabilities to drop files when the DB service account has filesystem privileges, turning the database into a pivot to the OS.</span></p>
+<p><span><strong>Download from Windows path via SQL</strong></span></p>
+<pre>nxc mssql 192.168.1.8 -u sa -p 'Ignite@987' --get-file C:\\users\\public\\raj.txt /tmp/raj.txt --local-auth</pre>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiLLK08zGtdXoFEZ_CcyFJBrnUatG9v9HgOUQvNYxU5Po-namXPg6eRfLspqvE9Ggzb9kZyh9-PblwI7BJJ71Fj2nQD5VQgkPIbfVsvgEfndeQAyL0ZgSz9nAR7FQY7BAvdbfKlUilEhTgwLEbNUQLwCcJ3bTmaUDmpzosk6fmlrcBSb2ldYKVW_NRdT9Y3/s16000/9.png"></p>
+<p><span>Retrieves a file from a Windows host through MS-SQL context and saves it locally. This method enables exfiltration of sensitive files via the database, acting as a covert channel to access otherwise restricted data.</span></p>
+<h3><span><strong>Conclusion</strong></span></h3>
+<p><span>File transfer is deceptively simple: it needs only credentials (or a misconfiguration) and gives a reliable path to stage tools, steal artifacts, and exfiltrate data. NXC makes these primitives easy to run during pentesting which is exactly why defenders must instrument and monitor them.</span></p>
+<p><span>For red teams: use these methods responsibly in scoped assessments and always document</span></p>
+<p><span>artifacts for cleanup.</span></p>
+<p><span>For blue teams: focus on telemetry that confirms chains of behavior (artifact read → credential reuse → outbound flow) and harden the services described above.</span></p>
+<h3><span><strong><span>Mitigation</span> </strong></span></h3>
+<ul>
+<li><span><strong>Harden Access &amp; Authentication:</strong> Enforce least privilege, disable password logins where possible, use SSH keys or MFA, and remove anonymous or shared accounts.</span></li>
+<li><span><strong>Restrict Network Exposure:</strong> Limit SSH, FTP, NFS, and MSSQL to trusted IPs or jump hosts; segment networks to isolate management and database services.</span></li>
+<li><span><strong>Secure File Operations:</strong> Disable unnecessary file transfer features (xp_cmdshell, FTP uploads), restrict writable directories, and protect sensitive paths (/etc/shadow, C:\Users\Public).</span></li>
+<li><span><strong>Monitor &amp; Detect Transfers:</strong> Centralize logging for SSH/FTP/NFS/MSSQL, alert on unexpected uploads/downloads or new binaries in system folders.</span></li>
+<li><span><strong>Regular Auditing &amp; Hardening:</strong> Continuously review service configurations, exported shares, and permissions to prevent misconfigurations that enable lateral movement.</span></li>
+</ul>
+<p><span><strong>Author: </strong>MD Aslam drives security excellence and mentors teams to strengthen security across products, networks, and organizations as a dynamic Information Security leader. Contact <strong><a href="https://www.linkedin.com/in/md-aslam-7b04ab144">here</a></strong></span></p>
+<div>
+
+<h3>Related posts:</h3>
+<div>
+<a href="https://www.hackingarticles.in/file-transfer-cheatsheet-windows-and-linux/" title="File Transfer Cheatsheet: Windows and Linux">
+<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>File Transfer Cheatsheet: Windows and Linux</span></a>
+<a href="https://www.hackingarticles.in/file-transfer-filter-bypass-exe2hex/" title="File Transfer Filter Bypass: Exe2Hex">
+<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>File Transfer Filter Bypass: Exe2Hex</span></a>
+</div>
+</div>
+</div>
+
+
+
+
+
+<h2>Post navigation</h2>
+<div><div><a href="https://www.hackingarticles.in/privacy-protection-metadata-cleaner/">Privacy Protection: Metadata Cleaner</a></div><div><a href="https://www.hackingarticles.in/privacy-protection-mobile-graphene-os-installation-part-1/">Privacy Protection Mobile – Graphene OS Installation (Part 1)</a></div></div>
+ </div>
+</div>
+
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{% endblock %}
