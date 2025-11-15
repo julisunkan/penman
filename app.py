@@ -57,13 +57,36 @@ def edit(tutorial_id):
     conn = get_db_connection()
     
     if request.method == 'POST':
+        from werkzeug.utils import secure_filename
+        
         title = request.form['title']
         description = request.form['description']
         html_content = request.form.get('html_content', '')
         
         tutorial = conn.execute('SELECT * FROM tutorials WHERE id = ?', (tutorial_id,)).fetchone()
         
-        if tutorial and html_content:
+        if not tutorial:
+            conn.close()
+            flash('Tutorial not found', 'error')
+            return redirect(url_for('admin'))
+        
+        image_path = tutorial['image_path']
+        
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                if tutorial['image_path']:
+                    old_image_path = os.path.join('static', tutorial['image_path'])
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                
+                filename = secure_filename(f"{tutorial['slug']}.{file.filename.rsplit('.', 1)[1].lower()}")
+                save_path = os.path.join('static', 'images', 'tutorial_images', filename)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                file.save(save_path)
+                image_path = f'images/tutorial_images/{filename}'
+        
+        if html_content:
             html_file_path = os.path.join('templates', 'tutorials', tutorial['html_filename'])
             
             tutorial_template = f"""
@@ -86,8 +109,8 @@ def edit(tutorial_id):
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 f.write(tutorial_template)
         
-        conn.execute('UPDATE tutorials SET title = ?, description = ? WHERE id = ?',
-                    (title, description, tutorial_id))
+        conn.execute('UPDATE tutorials SET title = ?, description = ?, image_path = ? WHERE id = ?',
+                    (title, description, image_path, tutorial_id))
         conn.commit()
         conn.close()
         

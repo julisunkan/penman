@@ -6,7 +6,7 @@
 <div class="container my-5">
     <h1 class="mb-4">Edit Tutorial</h1>
     
-    <form method="POST" action="{{ url_for('edit', tutorial_id=tutorial['id']) }}">
+    <form method="POST" action="{{ url_for('edit', tutorial_id=tutorial['id']) }}" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="title" class="form-label">Title</label>
             <input type="text" class="form-control" id="title" name="title" value="{{ tutorial['title'] }}" required>
@@ -21,6 +21,23 @@
             <label for="html_content" class="form-label">HTML Content</label>
             <textarea class="form-control font-monospace" id="html_content" name="html_content" rows="15" style="font-size: 13px;">{{ html_content }}</textarea>
             <div class="form-text">Edit the HTML content of the tutorial body.</div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Current Tutorial Image</label>
+            {% if tutorial['image_path'] %}
+                <div class="mb-2">
+                    <img src="{{ url_for('static', filename=tutorial['image_path']) }}" alt="{{ tutorial['title'] }}" style="max-width: 300px; border-radius: 8px;">
+                </div>
+            {% else %}
+                <p class="text-muted">No image currently set</p>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="image" class="form-label">Upload New Image (optional)</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div class="form-text">Upload a new image to replace the current one. Leave empty to keep the existing image.</div>
         </div>
         
         <div class="mb-3">
