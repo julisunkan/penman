@@ -1,0 +1,358 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h1>{{ tutorial['title'] }}</h1>
+    {% if tutorial['image_path'] %}
+    <img src="{{ url_for('static', filename=tutorial['image_path']) }}" class="img-fluid mb-4" alt="{{ tutorial['title'] }}">
+    {% endif %}
+    <div class="tutorial-content">
+        <h1 class="post-title entry-title">Credential Dumping with NetExec (nxc)</h1>
+<div class="post-date">&nbsp;</div>
+<div class="content post-excerpt entry-content clearfix">
+<p>In modern enterprise environments,&nbsp;<strong>Active Directory credentials</strong>&nbsp;are the ultimate prize for attackers. Whether you&rsquo;re a&nbsp;<strong>red teamer</strong>,&nbsp;<strong>penetration tester</strong>, or&nbsp;<strong>adversary simulation professional</strong>, gaining access to credentials is essential for&nbsp;<strong>privilege escalation</strong>,&nbsp;<strong>lateral movement</strong>, and&nbsp;<strong>persistence</strong>. But how do attackers actually collect these credentials in real-world scenarios?&nbsp;Enter&nbsp;<strong><a href="https://www.hackingarticles.in/active-directory-pentesting-using-netexec-tool-a-complete-guide/">NetExec</a>&nbsp;(nxc)</strong>&nbsp;a powerful, modern post-exploitation framework and the advanced successor to CrackMapExec. NetExec is built to automate and streamline&nbsp;<strong>credential dumping</strong>, making it one of the most effective tools for red teams and security professionals working in&nbsp;<strong>Windows and Active Directory environments</strong>.</p>
+<h5>What Is NetExec (nxc)?</h5>
+<p>NetExec is a&nbsp;<strong>post-exploitation Swiss Army knife</strong>&nbsp;designed for internal network operations. With extensive support for&nbsp;<strong>SMB</strong>,&nbsp;<strong>WinRM</strong>, and other protocols, it allows attackers to gather credentials from multiple sources including:</p>
+<ul>
+<li>LSASS memory (plaintext and NTLM hashes</li>
+<li>Windows registry and Winlogon keys</li>
+<li>Browsers, Wi-Fi profiles, and SSH clients</li>
+<li>LAPS-managed passwords and NTDS.dit database</li>
+<li>gMSA (Group Managed Service Accounts) secrets</li>
+<li>Third-party tools like&nbsp;<strong>PuTTY</strong>,&nbsp;<strong>mRemoteNG</strong>, and&nbsp;<strong>Notepad++</strong></li>
+</ul>
+<p>In this hands-on guide, we walk through a&nbsp;<strong>step-by-step red team simulation</strong>&nbsp;using&nbsp;<strong>NetExec over SMB</strong>&nbsp;to demonstrate how attackers collect credentials from a misconfigured Active Directory environment. Each step represents a real-world tactic commonly seen in offensive security operations.</p>
+<h5>Why This Matters for Red and Blue Teams?</h5>
+<p>For&nbsp;<strong>red teamers</strong>, this guide shows how NetExec can be weaponized to identify and exploit weak configurations within minutes; simulating realistic post-exploitation behavior that adversaries use daily.</p>
+<p>For&nbsp;<strong>blue team defenders</strong>&nbsp;and&nbsp;<strong>SOC analysts</strong>, it highlights&nbsp;<strong>critical detection opportunities</strong>&nbsp;and misconfiguration pitfalls that often go unnoticed, including:</p>
+<ul>
+<li>Stored credentials in plain text</li>
+<li>Misused service accounts</li>
+<li>Poor Wi-Fi and registry hygiene</li>
+<li>Over-permissive user group memberships (e.g., Backup Operators)</li>
+</ul>
+<h3>Table of Content</h3>
+<ul>
+<li><strong>Dump Local SAM Hashes</strong></li>
+<li><strong>Test Hash as Login Credential</strong></li>
+<li><strong>Extract LSA Secrets</strong></li>
+<li><strong>Retrieve Winlogon Registration Data</strong></li>
+<li><strong>Dump DAPI Password Credentials</strong></li>
+<li><strong>Extract Credentials from LSASS via LSASSASSY</strong></li>
+<li><strong>Dumping LSASS Memory with&nbsp;</strong><strong>nanodump</strong><strong>&nbsp;Module</strong></li>
+<li><strong>Extracting Stored Credentials from mRemoteNG Configuration</strong></li>
+<li><strong>Retrieve PuTTY Private Key Files</strong></li>
+<li><strong>Extract Notepad++ Session Logs</strong></li>
+<li><strong>Retrieve PowerShell Command History</strong></li>
+<li><strong>Extract WinSCP Configuration Files</strong></li>
+<li><strong>Dumping VNC Passwords</strong></li>
+<li><strong>Extract Wi-Fi Profiles/PSKs as Administrator</strong></li>
+<li><strong>Dumping Backup Operators Permission</strong></li>
+<li><strong>Dumping NTDS.dit Using an Authenticated User</strong></li>
+<li><strong>Extract gMSA Credentials</strong></li>
+<li><strong>Retrieve LAPS Password via NetExec (nxc)</strong></li>
+<li><strong>Mitigation</strong></li>
+</ul>
+<p>Ready to unlock the next level of password dumping? Let&rsquo;s dive into NXC SMB post-access enumeration, leveraging&nbsp;<strong>NetExec</strong>&nbsp;to dump credentials in multiple ways.</p>
+<h3>Dump Local SAM Hashes</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> &ndash;sam</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command instructs&nbsp;<strong>nxc</strong>&nbsp;to authenticate to the target system over SMB and extract NTLM password hashes from the local&nbsp;<strong>SAM</strong>&nbsp;database, which stores credentials for local user accounts.</p>
+<p><strong><em><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgcQ0zfLj4b9cIPk8AC8sJadYlBx6NQ8RY2LrolJsC3SZ4hyphenhyphenQvPuFpr2xkybZR7L4OGeGuv5SnU_m4WqmVlRkbxp25qF-SqnVzQrqQGs71uCQ7IkdRzBNUJUXRxD6DPJRhK2QHDMUyHoyOg1U4bAirH5O80C8HEXPtipRJFF828HBJx7aKmqZx153ngSVpz/s16000/1.png" alt="" border="0" data-original-height="249" data-original-width="1031" /></em></strong></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p>Accessing SAM hashes enables attackers to crack passwords offline. Perform&nbsp;<strong>Pass-the-Hash</strong>&nbsp;attacks across systems with shared local accounts, and maintain persistence by manipulating or recreating local users.</p>
+<h3>Test Hash as Login Credential</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">impacket-psexec ieuser@</span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">180</span><span class="enlighter-text"> -hashes:3dbde697d71690a769204beb12283678</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>The command remotely executes actions using the captured NTLM hash, validating the stolen credentials and enabling lateral movement and privilege escalation across the network.</p>
+<p><em><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEheJb9AnGIWg3-1nIs7QQtaZST14nMLYTtyIaf6rmtiCQ0CD9dmdEBVGXwvvp_kE2cGPooj1tNv49gten_oFI4LzBycZc5w1AiRCvn3F5ZIW5ry-RyJrZlyqscYDj9U20WHn9PmRWS0K5VuGicGl0PHRbdyUnC-9pDSib8tzgWfiBikHUTjbcSCc1WMW2Z6/s16000/2.png" alt="" border="0" data-original-height="302" data-original-width="789" /></em></p>
+<h3>Extract LSA Secrets</h3>
+<p>LSA secrets are highly valuable in post-exploitation, as they store credentials, service account secrets, and decryption keys for other sensitive data. In enterprise networks, these secrets play a crucial role in enabling lateral movement between machines and services.</p>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> --lsa</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>Then, this command retrieves LSA secrets, such as credentials and service keys, which contain long-lasting credentials and encrypted service passwords for persistent access.</p>
+<p><em><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjc2JOzC5-rBw2oKDjTeZLjGsB64saGBsHDrXTnuB0WRj5IuIQyijmfgcHH1eRP1i1btGoWy6qL0-a82Jt35UFa0q-5p9YR06xmeQQrkYU-VfT35VPGhCT5xpIZOWey_TJY8VvQtwUtq8V5SeM9RZPm9FT1srv00dZ_LkP6mDSOdYtuDOJZbQzb8rB1CXen/s16000/3.png" alt="" border="0" data-original-height="195" data-original-width="865" /></em></p>
+<h3>Retrieve Winlogon Registration Data</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M reg-winlogon</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command leverages NetExec&rsquo;s&nbsp;<strong>reg-winlogon</strong>&nbsp;module to query the registry keys in&nbsp;<strong>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon</strong>, which control automatic logins in Windows. Key values like&nbsp;<strong>AutoAdminLogon</strong>,&nbsp;<strong>DefaultUsername</strong>, and&nbsp;<strong>DefaultPassword</strong>&nbsp;can store credentials in plaintext, making them a valuable target for credential harvesting, especially in misconfigured environments where automatic login is enabled.</p>
+<p><strong><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoEwn6Z4l1WojriqzxMEPFKvIPNzSgjfrmhYg8e2JsjfT88u3SfedxSmlERSGPZ2kAuCBKtl0lsv0CyoIXnqUp5iXqSxezOBTcYJ01_2EbeTscqDWVEswZ3gdSkLQx2aQ461RDP0ELHUNjhSyiBqMmbkg6WDsrCCwGd9y7U8ZuwjuoDGzDaVUN830lniXW/s16000/4.png" alt="" border="0" data-original-height="175" data-original-width="826" /></strong></p>
+<h3>Dump DPAPI Password Credentials</h3>
+<p><strong>DPAPI</strong>&nbsp;(Data Protection API) is a Windows feature that securely stores user secrets like web credentials, browser passwords, Outlook, RDP, WiFi, and cached domain credentials, encrypting them with user-specific keys stored locally.</p>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> --dapi</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>Then, this command retrieves passwords stored by legacy&nbsp;<strong>DAPI</strong>&nbsp;services, which can serve as a vector for&nbsp;<strong>privilege escalation</strong>&nbsp;on older Windows systems vulnerable to outdated credential management.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBkEDL3gXDwv6vGe7XDEgbwBC2_ov2-XGbnof31Q6QgQqsx6Ua4v-o2pCx5nrxG01-bQNgvefmuW29Wu8c6b5cjXpnBx_uO3leT6BSbtzV9ZIDxp9TswoLKlrO9wIWatDkpeWYiLYsdbu3y3kvoB7FZNStAHrfLT_6qcA7dFGnyjtLFpadCuT872WwyK-o/s16000/5.png" alt="" border="0" data-original-height="191" data-original-width="1225" /></p>
+<p><strong>This reveals:</strong></p>
+<ul>
+<li>Windows Credential Manager dump (raj:Password@1)</li>
+<li>Facebook login recovered from Microsoft Edge</li>
+<li>LinkedIn password recovered from Firefox</li>
+</ul>
+<p><em><strong>Note</strong>: This is a&nbsp;<strong>post-exploitation goldmine</strong>; allowing lateral movement, credential chaining, and account hijacking across services.</em></p>
+<h3>Extract Credentials from LSASS via LSASSASSY</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M lsassy</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses NetExec&rsquo;s&nbsp;<strong>lsassy</strong>&nbsp;module to extract credentials directly from&nbsp;<strong>LSASS (Local Security Authority Subsystem Service)</strong>, a critical Windows process managing logins and sensitive data like password hashes and Kerberos tickets. It automates credential dumping using methods such as&nbsp;<strong>Procdump via SMB</strong>,&nbsp;<strong>Comsvcs.dll injection</strong>, and&nbsp;<strong>MiniDumpWriteDump APIs</strong>.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9AJS1j2D7cNYytSQ0nd_FWpN10WqXWdqftOgFobVsP9o66l0geHhuBe2KRqaxi-4HOhjcXPg8DX9SiV6iTvhYfW2hTjWi_3hG09HC4sMdVumTWb6LTaRkAVFpxanQeokIUc80QvujDIFN-c4lNg3nc-q7BvAYc9jt618Xzg0d7b_86MTfjrX4IgeKT4II/s16000/6.png" alt="" border="0" data-original-height="135" data-original-width="955" /></p>
+<p><strong><em>Why It Matters:</em></strong></p>
+<p>LSASS stores sensitive data in memory, including&nbsp;<strong>NTLM hashes</strong>,&nbsp;<strong>clear-text passwords</strong>&nbsp;(if&nbsp;<strong>WDigest</strong>&nbsp;is enabled),&nbsp;<strong>Kerberos tickets</strong>, and&nbsp;<strong>cached credentials</strong>. Dumping this information grants attackers valuable post-exploitation access, particularly if domain admins or other privileged users are logged in.</p>
+<h3>Dumping LSASS Memory with nanodump Module</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M nanodump</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses NetExec&rsquo;s&nbsp;<strong>nanodump</strong>&nbsp;module to remotely dump LSASS contents using the&nbsp;<strong>NanoDump</strong>&nbsp;tool, a modern, stealthy LSASS dumper designed to bypass security measures like&nbsp;<strong>Windows Defender</strong>,&nbsp;<strong>Anti-malware Scan Interface (AMSI)</strong>, and&nbsp;<strong>LSASS access restrictions</strong>. It employs SMB to deliver and execute NanoDump, capture LSASS memory, and store the dump file locally.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhI55f7Ty_tzrRZQLYxwWoF89fHAXHyZ3xQxcXlTWk_n1SQ2rVr0NKvEj7Wx4efGZiyCSYdQSVdOP5bEOpJxFhUTjiEoCP01n8cNU1FPt-PeYJfymDkc6Zx7oXTcoFtLRlB_mBJVpkpXwfjZUpjv-gIhAZRRXuikcD0tuU_oOu_RRu1BIY2mIvA5ee4G87Q/s16000/7.png" alt="" border="0" data-original-height="362" data-original-width="1009" /></p>
+<p><strong><em>Why It&rsquo;s Effective:</em></strong></p>
+<p>NanoDump is highly effective in&nbsp;<strong>credential harvesting</strong>&nbsp;because it bypasses detection from&nbsp;<strong>AV/EDR systems</strong>, avoids access restrictions, and produces a clean&nbsp;<strong>.dmp</strong>&nbsp;file for offline analysis, making it a more stealthy and reliable method compared to older tools.</p>
+<h3>Extracting Stored Credentials from mRemoteNG Configuration</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M mremoteng</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command targets the&nbsp;<strong>mRemoteNG</strong>&nbsp;application, a remote connection manager commonly used by sysadmins. The&nbsp;<strong>NetExec mremoteng</strong>&nbsp;module searches for configuration files like&nbsp;<strong>confCons.xml</strong>, decrypts stored credentials using known static keys, and displays them in cleartext for further use.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjt0IM3lSWs62voDCyDCXWLSHEu7i2w9p17aNNiErwDBgQBDeTo7Hrc8QrAHG7C8sta_vSFtrGS5Tb2_QWAUM6EPl4zv7yHaorOtqH9iKUeD8CHdwHmmnDZL-6GcmV_Ujda36ZMIY4uKs-06Jb4UJOE834959Ua-JSQ0LiFgjycfBU7vyPb99gHzawn4sPT/s16000/9.png" alt="" border="0" data-original-height="137" data-original-width="1097" /></p>
+<p><strong><em>Why It&rsquo;s Effective:</em></strong></p>
+<p>Admins often store high-privilege credentials or reuse passwords in remote session managers for convenience. If&nbsp;<strong>mRemoteNG</strong>&nbsp;is found, the dumped credentials could include&nbsp;<strong>Domain Admins</strong>,&nbsp;<strong>service accounts</strong>, or other privileged users, enabling immediate lateral movement via&nbsp;<strong>WinRM</strong>,&nbsp;<strong>RDP</strong>, or&nbsp;<strong>SSH</strong>.</p>
+<h3>Retrieve PuTTY Private Key Files</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M putty</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses NetExec&rsquo;s&nbsp;<strong>putty</strong>&nbsp;module to locate and extract&nbsp;<strong>SSH private keys</strong>&nbsp;stored by&nbsp;<strong>PuTTY</strong>, a popular SSH client for Windows. It searches both the Windows registry (<strong>HKCU\Software\SimonTatham\PuTTY\Sessions</strong>) and disk files (commonly in&nbsp;<strong>.ppk</strong>&nbsp;format), retrieving saved hostnames, usernames, and private keys (either encrypted or plain).</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh5iY4ZxKJBhf-119lKrP0zL4xhkfl5InL1GXKmWPDJ4ArOsEN1N60K2ltAZxf09LpFsqU55qzT6XID-PRJdxndjkMr7Ec4PkCuNPe_3ig0_2iHp19xWlzs2ePpRrETBxjDPF9o0hyaJ9d0_XYOah1VCrgtoEkK9QO5qyrj8bBAuvWjJuW73RDBS-iAUipg/s16000/10.png" alt="" border="0" data-original-height="205" data-original-width="970" /></p>
+<p><strong><em>Why It&rsquo;s Effective:</em></strong></p>
+<p>Admins often use&nbsp;<strong>PuTTY</strong>&nbsp;to manage&nbsp;<strong>Linux servers</strong>&nbsp;or network devices, and private keys may be stored with weak or no passphrases. If SSH keys are reused across different environments, this allows attackers to gain&nbsp;<strong>SSH-level access</strong>&nbsp;without needing a password.</p>
+<h4>View the Dumped Key Locally</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">cat </span><span class="enlighter-s0">'putty_IEUser_UbuntuKey_2025-05-22_175949.sec'</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>Displays the extracted private key or passphrase information. Test the extracted SSH keys on accessible targets using ssh -i for Linux or tools like&nbsp;<strong>Plink</strong>&nbsp;or&nbsp;<strong>WinSCP</strong>&nbsp;for Windows.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBkEstqOtq1aJT8WFlw5UslY_ZU4IBFvXtSoGEhgL3LZF8CL4x5KiIGhwPdIv17khCtW65TbGs2F230z3RIes1ra3rSecTj18A2_wmnX4G5r47tXwgIPOvXrkNFwXp6AkgCbwlQrwcb4DSE9Fl3RW-UZAVidKGcdiTdD8Ff5M6ol31D1j4RB8anvjW4dHH/s16000/11.png" alt="" border="0" data-original-height="553" data-original-width="717" /></p>
+<h3>Extract Notepad++ Session Logs</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M notepad++</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec&rsquo;s notepad++ module</strong>&nbsp;to locate session data, configuration files, or backups saved by&nbsp;<strong>Notepad++</strong>, a popular text editor. While Notepad++ isn&rsquo;t designed for credential storage, its autosave feature may inadvertently retain&nbsp;<strong>passwords in scripts</strong>,&nbsp;<strong>open files with sensitive data</strong>, or even&nbsp;<strong>clipboard history</strong>.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwDWI2gD6WPMlowKhgXDBKAnMbpaOuDuPIbF7RsOgV70dAj3K16lxJUUS6DtFZgsXgrLsCq15ICvP5ASidymnGe2mexwoYa7MEq5QKwoUiN2LNYRze3J0ImHh0FDRkadnuF5xOOAz28b-Ks0eD4euG_9Y32rPYvzHfFw1sXK4fPfio1NgQ0kFHkHhrx3GX/s16000/12.png" alt="credential dumping with NetExec" width="904" height="235" border="0" data-original-height="235" data-original-width="904" /></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p>Developers, sysadmins, or red teamers may temporarily store secrets in Notepad++ while working. Session recovery or backup files can persist even after the editor is closed and can be accessed via&nbsp;<strong>SMB</strong>&nbsp;if you have proper credentials and share access.</p>
+<p><em><strong>Note</strong>: This step enhances reconnaissance in the credential harvesting process, and while not always successful, it can uncover valuable assets such as access tokens, database connection strings, and SSH or admin credentials embedded in plaintext scripts.</em></p>
+<h3>Retrieve PowerShell Command History</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M powershell_history</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses the&nbsp;<strong>powershell_history module</strong>&nbsp;in&nbsp;<strong>NetExec</strong>&nbsp;to retrieve and analyze PowerShell command logs from a target user&rsquo;s system.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKYUKQ19p0cFMApk1s1k78pcmPiV7DepjVBldkX2D_v0e8SzV3mxpGrkYSgDR_4svhnm9ILQ9PV5eeJ9qcBGmjNn2mZ-XMGcAMlJo7L4bR1e5v2oVQEp4D6mI6aD8FsFIsNrpaEu3lBauBBWAnDv8mxSJXghkNPVCYY3FSv1pqnUVAH_UkWSwzYWqUmbUR/s16000/13.png" alt="" border="0" data-original-height="474" data-original-width="1147" /></p>
+<p>By default, PowerShell stores command history in:</p>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">C:\Users\</span><span class="enlighter-m0">IEUser</span><span class="enlighter-g1">(</span><span class="enlighter-text">user</span><span class="enlighter-g1">)</span><span class="enlighter-text">\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.</span><span class="enlighter-m3">txt</span></div>
+</div>
+</div>
+</div>
+</div>
+<p><strong><em>Why This Is Valuable</em></strong></p>
+<p>Attackers, admins, or developers frequently run credential-related commands in PowerShell, such as net use commands with hardcoded passwords, AD enumeration tools with -Credential arguments, or commands like Set-ADAccountPassword and New-ADUser. If not cleared, these commands are logged and can be retrieved to gain access to sensitive information.</p>
+<p><em><strong>Note</strong>: PowerShell history can expose plaintext credentials or system details, enhancing post-exploitation by enabling lateral movement or privilege escalation based on user activity.</em></p>
+<h3>Extract WinSCP Configuration Files</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M winscp</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec&rsquo;s winscp module</strong>&nbsp;to extract saved&nbsp;<strong>WinSCP site profiles</strong>, which may include&nbsp;<strong>remote hostnames, usernames, passwords</strong>&nbsp;(in plaintext or Base64), and&nbsp;<strong>SSH keys</strong>, stored either in the&nbsp;<strong>WinSCP.ini</strong>&nbsp;file or the&nbsp;<strong>Windows Registry</strong>, potentially allowing attackers to access&nbsp;<strong>FTP/SFTP/SSH</strong>&nbsp;targets, extract data, or deploy payloads.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEisgAO3aEPpMZj30yVItYuhX2iCGtgwHpb6EIrOylxa_c-NRHwovIdk9qtt3teHX3xyknOuSWWqC8LtnlL67a6qzIz8p1gTNg59z1wzRyJ1owp_-O0_kKHOysEOF9GQTcA-F7hvq0V9O53gvGR_DUHG0jgjbqP2TJEG1Y33lymNo-Rr8uiCguurn_ruE9Ck/s16000/14.png" alt="credential dumping with NetExec" width="789" height="231" border="0" data-original-height="231" data-original-width="789" /></p>
+<h3>Dumping VNC Passwords</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">80</span><span class="enlighter-text"> -u ieuser -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M vnc</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec&rsquo;s vnc module</strong>&nbsp;to search for stored&nbsp;<strong>VNC credentials</strong>&nbsp;on the target machine, scanning common registry keys or configuration files where VNC clients (like&nbsp;<strong>UltraVNC</strong>,&nbsp;<strong>RealVNC</strong>, and&nbsp;<strong>TightVNC</strong>) often store access passwords, which may be poorly encrypted or even in plaintext. It looks in locations like:</p>
+<ul>
+<li><strong>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\WinVNC3\Password</strong></li>
+<li><strong>HKEY_LOCAL_MACHINE\SOFTWARE\RealVNC\vncserver</strong></li>
+</ul>
+<p>NetExec attempts to decode any found credentials.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjfuFb0eQhVezDXOPQos062dCOS9w599TAlAYoQp8b4PsxqocjRSpna0gPASrkFwGSVyuoqaUaQt7jcGI_Q6k2ZGcaalMDPoOsi4V0OmmHgIb63DpnAH7xrhIF3aG5nTeiIfB-voh2n-LjHFEz-DAelLNgFr4zK6eZNIGudNoUa6-tSmoNuzLrf6wWUWy5V/s16000/15.png" alt="" border="0" data-original-height="115" data-original-width="808" /></p>
+<p><strong><em>Why This Is Important:</em></strong></p>
+<p><strong>VNC</strong>&nbsp;provides remote desktop access, and if passwords are extracted from the registry or config files, attackers can access systems without needing valid user credentials. These passwords are often reused across multiple systems, enabling&nbsp;<strong>lateral movement</strong>&nbsp;and maintaining&nbsp;<strong>persistence</strong>&nbsp;on the network.</p>
+<p><em><strong>Note</strong>: Harvesting VNC credentials lets attackers bypass Windows authentication, often found in exposed legacy systems or unmanaged remote support setups.</em></p>
+<h3>Extracting Wi-Fi Credentials</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">46</span><span class="enlighter-text"> -u administrator -p </span><span class="enlighter-n1">123</span><span class="enlighter-text"> -M wifi</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses NetExec&rsquo;s&nbsp;<strong data-start="100" data-end="108">wifi</strong>&nbsp;module in order to extract stored Wi-Fi credentials (SSIDs and PSKs) from a target Windows machine by querying&nbsp;<strong>PowerShell</strong>&nbsp;or reading registry paths. Thereby allowing attackers to access internal networks, pivot to insecure Wi-Fi zones, and reuse credentials for other access.</p>
+<p><em><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiyTClSBr5h5f6TZRWMg4tPh9Q_g1GauTZGnGWR_lJT0aIgwKqPNsmR4_MB8_Fg92A_jlqPkZTbOOX5ad6fygg9aIV5ueo_p_uWWPy1QDF0mLOThctwfNxoQ-2m0tKqi3rPwgvn55q31mMAZhkrdxDouKT9_8NQvQcSVeN2Sn5gfEyp6lplYjzKR1GMc7I9/s16000/16.png" alt="credential dumping with NetExec" width="987" height="309" border="0" data-original-height="309" data-original-width="987" /></em></p>
+<h3>Dumping Backup Operators Permission</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">53</span><span class="enlighter-text"> -u raj -p Password@</span><span class="enlighter-n1">1</span><span class="enlighter-text"> -M backup_operator</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec&rsquo;s -M backup_operator module</strong>&nbsp;to check if a user (e.g.,&nbsp;<strong>raj</strong>) is a member of the&nbsp;<strong>Backup Operators</strong>&nbsp;group. Similarly checks whether they can read sensitive files, such as&nbsp;<strong>SAM</strong>,&nbsp;<strong>SYSTEM</strong>,&nbsp;<strong>SECURITY</strong>, and&nbsp;<strong>NTDS.dit</strong>, which are typically restricted to administrators.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgK79XdxEdnnjWPocur1JLkENhkGTzwLzG-5XI4K4Z9o8z2T-Ez-yx_DufKOtSxLWnxUfuLWX5lyIGkHvJZl_kJ4hAKmdQpxaInadYd_34IeRjO7AJd7AjaixKVUlZQT-9goFMVE5-bFucg3QaU4Gnfg-hkkRk9xOv0BY7zGCebz96HEfqMVd4efmHuHi-5/s16000/19.png" alt="" border="0" data-original-height="611" data-original-width="1082" /></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p><strong>Backup Operators</strong>&nbsp;have the ability to bypass file system permissions for backup and restore operations. Even without admin rights, a user in this group can:</p>
+<ul>
+<li>Extract the&nbsp;<strong>dit</strong>&nbsp;database</li>
+<li>Access&nbsp;<strong>SAM</strong>&nbsp;and&nbsp;<strong>SYSTEM</strong>&nbsp;hives</li>
+<li>Bypass certain system protections</li>
+</ul>
+<p>This makes a low-privilege user in the&nbsp;<strong>Backup Operators</strong>&nbsp;group a significant&nbsp;<strong>domain takeover</strong>&nbsp;vector.</p>
+<p><em><strong>Note</strong>: Backup Operators are a high-risk group in misconfigured AD setups and should be treated as privileged, with regular membership audits.</em></p>
+<h3>Dumping NTDS.dit Using an Authenticated User</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">53</span><span class="enlighter-text"> -u yashika -p Password@</span><span class="enlighter-n1">1</span><span class="enlighter-text"> --ntds</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec</strong>&nbsp;to dump the&nbsp;<strong>NTDS.dit</strong>&nbsp;file. This file contains critical Active Directory data such as&nbsp;<strong>usernames</strong>,&nbsp;<strong>NTLM password hashes</strong>,&nbsp;<strong>group memberships</strong>, and&nbsp;<strong>domain trust details</strong>. NetExec automates the process by using&nbsp;<strong>Volume Shadow Copy</strong>&nbsp;and exporting the&nbsp;<strong>SYSTEM hive</strong>&nbsp;to decrypt the hashes.</p>
+<p><em><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi6vqjJFSSxfE4PABMBRRuM9G6vHphWmRmMbkA_Oxdu_1Do7eOJN0w1JlpxZOcpQbjfHGETvNvJm9OZV926nTqRtUK6Y_07XqOO46nM6MQaOpitRDDH6ZXvPCQqK0s1PruIi1-PfrwWQCdA9A4BGgQcHsyHyDOmODRE2jV6QPOiMdoPqpPYSh9fGfyYKhJN/s16000/20.png" alt="credential dumping with NetExec" width="1165" height="352" border="0" data-original-height="352" data-original-width="1165" /></em></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p><strong>NTDS.dit</strong>&nbsp;is essential for attackers in a Windows domain. Extracting it allows for&nbsp;<strong>offline cracking of domain hashes</strong>,&nbsp;<strong>Pass-the-hash</strong>&nbsp;attacks, and provides&nbsp;<strong>full control</strong>&nbsp;over all domain users, including&nbsp;<strong>administrators</strong>&nbsp;and&nbsp;<strong>service accounts</strong>, making it a key step in red team operations or APT engagements.</p>
+<p><em><strong>Note</strong>: The NTDS.dit dump enables domain-wide credential exfiltration, allowing attackers to crack weak hashes, reuse them in&nbsp;<strong>Pass-the-Hash</strong>&nbsp;attacks, or forge&nbsp;<strong>Golden Tickets</strong>&nbsp;with&nbsp;<strong>krbtgt</strong>&nbsp;credentials.</em></p>
+<h3>Extract gMSA Credentials</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">53</span><span class="enlighter-text"> -u komal -p Passwor@</span><span class="enlighter-n1">1</span><span class="enlighter-text"> &ndash;gmsa</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses&nbsp;<strong>NetExec</strong>&nbsp;to enumerate&nbsp;<strong>Group Managed Service Accounts (gMSAs)</strong>&nbsp;from Active Directory, retrieving their&nbsp;<strong>account names</strong>,&nbsp;<strong>Kerberos keys</strong>&nbsp;(plaintext or hashes), and related metadata if permissions allow.</p>
+<p><em><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwgnpb69A3PtjecsawjXTEf8ftZEpS2XD8yCWUsIXfvK8oipa_HoJyKmzdu-a_u-O2d7unBMDShp6iQ1UUfJdXNXnKG6NFOuUQh45vEZVL-d3c6J72hpmxHziKkH3Y88uNWp7DZIGFMLeY9B3Ad4W8qgxl_qzYulixSCKjCpdsuBc3JPMUksmTkwAWq_w2/s16000/21.png" alt="" border="0" data-original-height="154" data-original-width="1100" /></em></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p>Dumping a gMSA&rsquo;s secret lets attackers&nbsp;<strong>impersonate the account</strong>, gain&nbsp;<strong>lateral movement</strong>, and&nbsp;<strong>authenticate to services</strong>&nbsp;like MSSQL or IIS for further internal attacks.</p>
+<h3>Retrieve LAPS Password via NetExec (nxc)</h3>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">53</span><span class="enlighter-text"> -u komal -p Passwor@</span><span class="enlighter-n1">1</span><span class="enlighter-text"> -M laps</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command uses NetExec&rsquo;s&nbsp;<strong>-M laps module</strong>&nbsp;to target&nbsp;<strong>Microsoft LAPS</strong>&nbsp;(Local Administrator Password Solution), which stores unique local admin passwords in Active Directory. Specifically, It attempts to query the&nbsp;<strong>ms-Mcs-AdmPwd</strong>&nbsp;attribute of computer accounts to retrieve the current local admin password.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgH6VH3byuH7yk8dMe6CVAYvEFsDs_PncUEHpGmFlfMgZrhR3vi_Neg48XSqTA8Pvnlkv1WPNvP_ePqH4UUpgp49vsBM5Y3xApMFbxMDqAsl3ASm9uMYxlvjW2LG9YRKBOywxeV4Xupmt4avqz9jxcYqftWqAGHydONx71okKT1aQDwcB6sw63a6nmSqb0o/s16000/22.png" alt="credential dumping with NetExec" width="1097" height="159" border="0" data-original-height="159" data-original-width="1097" /></p>
+<p><strong><em>Why This Matters:</em></strong></p>
+<p>If successful, it provides&nbsp;<strong>local admin access</strong>&nbsp;to target machines using their LAPS-managed password. It enables&nbsp;<strong>privilege escalation</strong>&nbsp;and&nbsp;<strong>lateral movement</strong>&nbsp;across the network via&nbsp;<strong>SMB</strong>,&nbsp;<strong>PSExec</strong>,&nbsp;<strong>WinRM</strong>, etc., effectively granting full control over the machine.</p>
+<p>Would like to learn more about credential dumping. Please see the information provided&nbsp;<a href="https://www.hackingarticles.in/category/credential-dumping/">here</a>.</p>
+<h3>Mitigation</h3>
+<ul>
+<li><strong>Segregate SMB access</strong>: Especially remote registry and file share access for low-privilege accounts.</li>
+<li><strong>Monitor access</strong>: Alert on LSA, SAM, or registry accesses via SMB.</li>
+<li><strong>Limit stored credentials</strong>: Encourage disabling auto-login and removing saved sessions in apps.</li>
+<li><strong>Restrict roles</strong>: Minimize Backup Operator and gMSA membership.</li>
+<li><strong>Validate file access</strong>: Detect unusual WinSCP, PuTTY, VNC config access patterns.</li>
+</ul>
+</div>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{% endblock %}
