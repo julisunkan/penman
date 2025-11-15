@@ -40,11 +40,18 @@ The scraper will:
 Access the admin panel at: `/secret-admin-panel`
 
 Features:
+- **Scrape New Tutorials**: Enter a URL directly in the admin panel to scrape and add tutorials
 - View all tutorials in a table
 - Edit tutorial titles and descriptions
 - Delete tutorials (removes HTML files and images)
 
-**Note**: The admin panel has no authentication by design, as specified in the project requirements.
+**Allowed Domains for Scraping**:
+- hackingarticles.in
+- cybersecuritynews.com
+- hackthebox.com
+- tryhackme.com
+
+**Note**: The admin panel has no authentication by design, as specified in the project requirements. Scraping is restricted to the allowed domains list for security.
 
 ## Project Structure
 
@@ -82,10 +89,15 @@ Features:
 
 ## Security
 
+- **SSRF Protection**: Comprehensive Server-Side Request Forgery protection with:
+  - Domain allowlist restricting scraping to trusted cybersecurity sources
+  - IP address validation rejecting private/loopback/reserved addresses
+  - DNS pinning to prevent DNS rebinding attacks
+  - Redirect suppression to prevent redirect-based SSRF
+- **XSS Prevention**: HTML content sanitized using Bleach with strict tag/attribute allowlists
+- **SQL Injection Prevention**: Database queries use parameterized statements
 - Admin panel uses hidden route (no authentication by design)
 - Session secret stored in environment variable `SESSION_SECRET`
-- HTML content sanitized using Bleach to prevent XSS attacks
-- Database queries use parameterized statements to prevent SQL injection
 
 ## Future Enhancements
 
