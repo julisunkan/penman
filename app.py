@@ -8,8 +8,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
 
 ALLOWED_DOMAINS = [
-    'hackingarticles.in',
-    'www.hackingarticles.in',
+    'hackingguides.in',
+    'www.hackingguides.in',
     'cybersecuritynews.com',
     'www.cybersecuritynews.com',
     'hackthebox.com',
