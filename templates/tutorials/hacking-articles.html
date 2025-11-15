@@ -12,280 +12,201 @@
 <div>
 <div>
 <div>
-<span><a href="https://www.hackingarticles.in/category/osint/">OSINT</a></span> </div>
-<h1>Privacy Protection: Email</h1> <div>
+<span><a href="https://www.hackingarticles.in/category/credential-dumping/">Credential Dumping</a>, <a href="https://www.hackingarticles.in/category/red-teaming/domain-credential/">Domain Credential</a>, <a href="https://www.hackingarticles.in/category/red-teaming/">Red Teaming</a></span> </div>
+<h1>Credential Dumping with NetExec (nxc)</h1> <div>
 <div>
-<span><a href="https://www.hackingarticles.in/privacy-protection-email/">September 17, 2025September 17, 2025</a></span><span> by <span><a href="https://www.hackingarticles.in/author/raj/">Raj</a></span></span> </div>
+<span><a href="https://www.hackingarticles.in/credential-dumping-with-netexec-nxc/">August 11, 2025August 11, 2025</a></span><span> by <span><a href="https://www.hackingarticles.in/author/raj/">Raj</a></span></span> </div>
 </div>
 <div>
-<p><span>Privacy Protection Email refers to a secure and anonymous email service designed to safeguard a user’s personal information, communication metadata, and identity from unauthorized access, surveillance, and data exploitation. Unlike conventional email providers, these services emphasize encryption, minimal data retention, and user anonymity, ensuring that sensitive correspondence remains private and resistant to tracking or profiling.</span></p>
-<h3><span>Table Of Contents</span></h3>
+<p><span>In modern enterprise environments, <strong>Active Directory credentials</strong> are the ultimate prize for attackers. Whether you’re a <strong>red teamer</strong>, <strong>penetration tester</strong>, or <strong>adversary simulation professional</strong>, gaining access to credentials is essential for <strong>privilege escalation</strong>, <strong>lateral movement</strong>, and <strong>persistence</strong>. But how do attackers actually collect these credentials in real-world scenarios? </span><span>Enter <strong><span><a href="https://www.hackingarticles.in/active-directory-pentesting-using-netexec-tool-a-complete-guide/">NetExec</a> </span>(nxc)</strong> a powerful, modern post-exploitation framework and the advanced successor to CrackMapExec. NetExec is built to automate and streamline <strong>credential dumping</strong>, making it one of the most effective tools for red teams and security professionals working in <strong>Windows and Active Directory environments</strong>.</span></p>
+<h5><span>What Is NetExec (nxc)?</span></h5>
+<p><span>NetExec is a <strong>post-exploitation Swiss Army knife</strong> designed for internal network operations. With extensive support for <strong>SMB</strong>, <strong>WinRM</strong>, and other protocols, it allows attackers to gather credentials from multiple sources including:</span></p>
 <ul>
-<li><span>Why We Need Privacy</span></li>
-<li><span>How to Choose the Right Privacy Email Service</span></li>
-<li><span>Best Practices for Protecting Email Privacy</span></li>
-<li><span>Tutanota</span></li>
-<li><span>Proton Mail</span></li>
-<li><span>Other Secure Email Providers</span></li>
-<li><span>Future of Privacy in Email Communication</span></li>
-<li><span>Conclusion</span></li>
+<li><span>LSASS memory (plaintext and NTLM hashes</span></li>
+<li><span>Windows registry and Winlogon keys</span></li>
+<li><span>Browsers, Wi-Fi profiles, and SSH clients</span></li>
+<li><span>LAPS-managed passwords and NTDS.dit database</span></li>
+<li><span>gMSA (Group Managed Service Accounts) secrets</span></li>
+<li><span>Third-party tools like <strong>PuTTY</strong>, <strong>mRemoteNG</strong>, and <strong>Notepad++</strong></span></li>
 </ul>
-<h3><span>Why We Need Privacy</span></h3>
-<ol>
-<li><span><strong> Protection from Surveillance</strong></span></li>
-</ol>
-<p><span>Without privacy, governments, corporations, or hackers can track your every move — emails, chats, browsing, even your location. Privacy keeps surveillance in check.</span></p>
-<ol>
-<li><span><strong> Security of Personal Data</strong></span></li>
-</ol>
-<p><span>Your emails, passwords, bank details, and medical records are sensitive. If they fall into the wrong hands, it can lead to <strong>identity theft, financial fraud, or blackmail</strong>.</span></p>
-<ol>
-<li><span><strong> Freedom of Speech</strong></span></li>
-</ol>
-<p><span>Privacy ensures people can express their views freely without fear of being monitored, judged, or punished. Activists, journalists, and whistleblowers rely on this.</span></p>
-<ol>
-<li><span><strong> Control Over Your Information</strong></span></li>
-</ol>
-<p><span>Without privacy, companies build profiles of you (interests, habits, spending). This data is used for <strong>targeted ads, manipulation, or even political influence</strong> (e.g., Cambridge Analytica scandal).</span></p>
-<ol>
-<li><span><strong> Avoid Discrimination</strong></span></li>
-</ol>
-<p><span>Your data could reveal health issues, religion, or political views. If exposed, it may lead to <strong>workplace bias, insurance discrimination, or social targeting</strong>.</span></p>
-<ol>
-<li><span><strong> Digital Safety &amp; Anonymity</strong></span></li>
-</ol>
-<p><span>Privacy tools (like encrypted email or VPNs) help maintain anonymity online, reducing the chances of cyberstalking, harassment, or doxxing.</span></p>
-<ol>
-<li><span><strong> Peace of Mind</strong></span></li>
-</ol>
-<p><span>Knowing your conversations, photos, and documents are secure reduces stress and gives you confidence to use digital services safely.</span></p>
-<h3><span>How to Choose the Right Privacy Email Service</span></h3>
+<p><span>In this hands-on guide, we walk through a <strong>step-by-step red team simulation</strong> using <strong>NetExec over SMB</strong> to demonstrate how attackers collect credentials from a misconfigured Active Directory environment. Each step represents a real-world tactic commonly seen in offensive security operations.</span></p>
+<h5><span>Why This Matters for Red and Blue Teams?</span></h5>
+<p><span>For <strong>red teamers</strong>, this guide shows how NetExec can be weaponized to identify and exploit weak configurations within minutes; simulating realistic post-exploitation behavior that adversaries use daily.</span></p>
+<p><span>For <strong>blue team defenders</strong> and <strong>SOC analysts</strong>, it highlights <strong>critical detection opportunities</strong> and misconfiguration pitfalls that often go unnoticed, including:</span></p>
 <ul>
-<li><span>Check encryption standards (end-to-end, zero-knowledge policies).</span></li>
-<li><span>Review data storage and retention policies.</span></li>
-<li><span>Look at server locations (privacy-friendly jurisdictions).</span></li>
-<li><span>Prefer open-source providers for transparency.</span></li>
-<li><span>Consider ease of use, apps, and device compatibility.</span></li>
-<li><span>Compare pricing and storage limits.</span></li>
-<li><span>Balance between strong security and convenience.</span></li>
+<li><span>Stored credentials in plain text</span></li>
+<li><span>Misused service accounts</span></li>
+<li><span>Poor Wi-Fi and registry hygiene</span></li>
+<li><span>Over-permissive user group memberships (e.g., Backup Operators)</span></li>
 </ul>
-<h3><span>Best Practices for Protecting Email Privacy</span></h3>
+<h3><span>Table of Content</span></h3>
 <ul>
-<li><span>Enable two-factor authentication (2FA).</span></li>
-<li><span>Use strong, unique passwords for each account.</span></li>
-<li><span>Keep personal and anonymous accounts separate.</span></li>
-<li><span>Regularly update apps and devices for security patches.</span></li>
-<li><span>Use a VPN or Tor for extra anonymity.</span></li>
-<li><span>Stay cautious of phishing emails and suspicious links.</span></li>
-<li><span>Minimize sharing personal information via email.</span></li>
+<li><span><strong>Dump Local SAM Hashes</strong></span></li>
+<li><span><strong>Test Hash as Login Credential</strong></span></li>
+<li><span><strong>Extract LSA Secrets</strong></span></li>
+<li><span><strong>Retrieve Winlogon Registration Data</strong></span></li>
+<li><span><strong>Dump DAPI Password Credentials</strong></span></li>
+<li><span><strong>Extract Credentials from LSASS via LSASSASSY</strong></span></li>
+<li><span><strong>Dumping LSASS Memory with </strong><strong>nanodump</strong><strong> Module</strong></span></li>
+<li><span><strong>Extracting Stored Credentials from mRemoteNG Configuration</strong></span></li>
+<li><span><strong>Retrieve PuTTY Private Key Files</strong></span></li>
+<li><span><strong>Extract Notepad++ Session Logs</strong></span></li>
+<li><span><strong>Retrieve PowerShell Command History</strong></span></li>
+<li><span><strong>Extract WinSCP Configuration Files</strong></span></li>
+<li><span><strong>Dumping VNC Passwords</strong></span></li>
+<li><span><strong>Extract Wi-Fi Profiles/PSKs as Administrator</strong></span></li>
+<li><span><strong>Dumping Backup Operators Permission</strong></span></li>
+<li><span><strong>Dumping NTDS.dit Using an Authenticated User</strong></span></li>
+<li><span><strong>Extract gMSA Credentials</strong></span></li>
+<li><span><strong>Retrieve LAPS Password via NetExec (nxc) </strong></span></li>
+<li><span><strong>Mitigation</strong></span></li>
 </ul>
-<h3><span>Tutanota</span></h3>
-<p><span>Tutanota is a secure and privacy-focused email service based in Germany. It emphasizes end-to-end encryption, open-source technology, and no ads or tracking. It’s a solid choice if you’re looking for a private email provider that protects your data from surveillance, whether by corporations or governments.</span></p>
-<h5><span><strong>Key Features</strong></span></h5>
+<p><span>Ready to unlock the next level of password dumping? Let’s dive into NXC SMB post-access enumeration, leveraging <strong>NetExec</strong> to dump credentials in multiple ways.</span></p>
+<h3><span>Dump Local SAM Hashes</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 –sam</pre>
+<p><span>This command instructs <strong>nxc</strong> to authenticate to the target system over SMB and extract NTLM password hashes from the local <strong>SAM</strong> database, which stores credentials for local user accounts.</span></p>
+<p><span><strong><em> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgcQ0zfLj4b9cIPk8AC8sJadYlBx6NQ8RY2LrolJsC3SZ4hyphenhyphenQvPuFpr2xkybZR7L4OGeGuv5SnU_m4WqmVlRkbxp25qF-SqnVzQrqQGs71uCQ7IkdRzBNUJUXRxD6DPJRhK2QHDMUyHoyOg1U4bAirH5O80C8HEXPtipRJFF828HBJx7aKmqZx153ngSVpz/s16000/1.png"></em></strong></span></p>
+<p><span><strong><em>Why This Matters:</em></strong></span></p>
+<p><span>Accessing SAM hashes enables attackers to crack passwords offline. Perform <strong>Pass-the-Hash</strong> attacks across systems with shared local accounts, and maintain persistence by manipulating or recreating local users.</span></p>
+<h3><span>Test Hash as Login Credential</span></h3>
+<pre>impacket-psexec ieuser@192.168.180 -hashes:3dbde697d71690a769204beb12283678</pre>
+<p><span>The command remotely executes actions using the captured NTLM hash, validating the stolen credentials and enabling lateral movement and privilege escalation across the network.</span></p>
+<p><span><em> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEheJb9AnGIWg3-1nIs7QQtaZST14nMLYTtyIaf6rmtiCQ0CD9dmdEBVGXwvvp_kE2cGPooj1tNv49gten_oFI4LzBycZc5w1AiRCvn3F5ZIW5ry-RyJrZlyqscYDj9U20WHn9PmRWS0K5VuGicGl0PHRbdyUnC-9pDSib8tzgWfiBikHUTjbcSCc1WMW2Z6/s16000/2.png"></em></span></p>
+<h3><span>Extract LSA Secrets</span></h3>
+<p><span>LSA secrets are highly valuable in post-exploitation, as they store credentials, service account secrets, and decryption keys for other sensitive data. In enterprise networks, these secrets play a crucial role in enabling lateral movement between machines and services.</span></p>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 --lsa</pre>
+<p><span>Then, this command retrieves LSA secrets, such as credentials and service keys, which contain long-lasting credentials and encrypted service passwords for persistent access.</span></p>
+<p><span><em> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjc2JOzC5-rBw2oKDjTeZLjGsB64saGBsHDrXTnuB0WRj5IuIQyijmfgcHH1eRP1i1btGoWy6qL0-a82Jt35UFa0q-5p9YR06xmeQQrkYU-VfT35VPGhCT5xpIZOWey_TJY8VvQtwUtq8V5SeM9RZPm9FT1srv00dZ_LkP6mDSOdYtuDOJZbQzb8rB1CXen/s16000/3.png"></em></span></p>
+<h3><span>Retrieve Winlogon Registration Data</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M reg-winlogon</pre>
+<p><span>This command leverages NetExec’s <strong>reg-winlogon</strong> module to query the registry keys in <strong>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon</strong>, which control automatic logins in Windows. Key values like <strong>AutoAdminLogon</strong>, <strong>DefaultUsername</strong>, and <strong>DefaultPassword</strong> can store credentials in plaintext, making them a valuable target for credential harvesting, especially in misconfigured environments where automatic login is enabled.</span></p>
+<p><span><strong> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoEwn6Z4l1WojriqzxMEPFKvIPNzSgjfrmhYg8e2JsjfT88u3SfedxSmlERSGPZ2kAuCBKtl0lsv0CyoIXnqUp5iXqSxezOBTcYJ01_2EbeTscqDWVEswZ3gdSkLQx2aQ461RDP0ELHUNjhSyiBqMmbkg6WDsrCCwGd9y7U8ZuwjuoDGzDaVUN830lniXW/s16000/4.png"></strong></span></p>
+<h3><span>Dump DPAPI Password Credentials</span></h3>
+<p><span><strong>DPAPI</strong> (Data Protection API) is a Windows feature that securely stores user secrets like web credentials, browser passwords, Outlook, RDP, WiFi, and cached domain credentials, encrypting them with user-specific keys stored locally.</span></p>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 --dapi</pre>
+<p><span>Then, this command retrieves passwords stored by legacy <strong>DAPI</strong> services, which can serve as a vector for <strong>privilege escalation</strong> on older Windows systems vulnerable to outdated credential management.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBkEDL3gXDwv6vGe7XDEgbwBC2_ov2-XGbnof31Q6QgQqsx6Ua4v-o2pCx5nrxG01-bQNgvefmuW29Wu8c6b5cjXpnBx_uO3leT6BSbtzV9ZIDxp9TswoLKlrO9wIWatDkpeWYiLYsdbu3y3kvoB7FZNStAHrfLT_6qcA7dFGnyjtLFpadCuT872WwyK-o/s16000/5.png"></span></p>
+<p><strong><span>This reveals:</span></strong></p>
 <ul>
-<li><span>End-to-end encrypted emails, calendars, and contacts.</span></li>
-<li><span>Encrypted subject lines (unlike many other providers).</span></li>
-<li><span>Zero-knowledge architecture — even Tutanota can’t access your data.</span></li>
-<li><span>Open-source for transparency.</span></li>
-<li><span>Based in Germany (strict EU GDPR privacy regulations).</span></li>
-<li><span>Free plan available with generous features.</span></li>
-<li><span>Ad-free and privacy-first business model (no data selling).</span></li>
-<li><span>Encrypted search function for secure searching within emails.</span></li>
+<li><span>Windows Credential Manager dump (raj:Password@1)</span></li>
+<li><span>Facebook login recovered from Microsoft Edge</span></li>
+<li><span>LinkedIn password recovered from Firefox</span></li>
 </ul>
-<h5><span><strong>Pros</strong></span></h5>
+<p><span><em><strong>Note</strong>: This is a <strong>post-exploitation goldmine</strong>; allowing lateral movement, credential chaining, and account hijacking across services.</em></span></p>
+<h3><span>Extract Credentials from LSASS via LSASSASSY</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M lsassy</pre>
+<p><span>This command uses NetExec’s <strong>lsassy</strong> module to extract credentials directly from <strong>LSASS (Local Security Authority Subsystem Service)</strong>, a critical Windows process managing logins and sensitive data like password hashes and Kerberos tickets. It automates credential dumping using methods such as <strong>Procdump via SMB</strong>, <strong>Comsvcs.dll injection</strong>, and <strong>MiniDumpWriteDump APIs</strong>.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9AJS1j2D7cNYytSQ0nd_FWpN10WqXWdqftOgFobVsP9o66l0geHhuBe2KRqaxi-4HOhjcXPg8DX9SiV6iTvhYfW2hTjWi_3hG09HC4sMdVumTWb6LTaRkAVFpxanQeokIUc80QvujDIFN-c4lNg3nc-q7BvAYc9jt618Xzg0d7b_86MTfjrX4IgeKT4II/s16000/6.png"></span></p>
+<p><strong><span><em>Why It Matters:</em></span></strong></p>
+<p><span>LSASS stores sensitive data in memory, including <strong>NTLM hashes</strong>, <strong>clear-text passwords</strong> (if <strong>WDigest</strong> is enabled), <strong>Kerberos tickets</strong>, and <strong>cached credentials</strong>. Dumping this information grants attackers valuable post-exploitation access, particularly if domain admins or other privileged users are logged in.</span></p>
+<h3><span>Dumping LSASS Memory with nanodump Module</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M nanodump</pre>
+<p><span>This command uses NetExec’s <strong>nanodump</strong> module to remotely dump LSASS contents using the <strong>NanoDump</strong> tool, a modern, stealthy LSASS dumper designed to bypass security measures like <strong>Windows Defender</strong>, <strong>Anti-malware Scan Interface (AMSI)</strong>, and <strong>LSASS access restrictions</strong>. It employs SMB to deliver and execute NanoDump, capture LSASS memory, and store the dump file locally.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhI55f7Ty_tzrRZQLYxwWoF89fHAXHyZ3xQxcXlTWk_n1SQ2rVr0NKvEj7Wx4efGZiyCSYdQSVdOP5bEOpJxFhUTjiEoCP01n8cNU1FPt-PeYJfymDkc6Zx7oXTcoFtLRlB_mBJVpkpXwfjZUpjv-gIhAZRRXuikcD0tuU_oOu_RRu1BIY2mIvA5ee4G87Q/s16000/7.png"></span></p>
+<p><strong><span><em>Why It’s Effective:</em></span></strong></p>
+<p><span>NanoDump is highly effective in <strong>credential harvesting</strong> because it bypasses detection from <strong>AV/EDR systems</strong>, avoids access restrictions, and produces a clean <strong>.dmp</strong> file for offline analysis, making it a more stealthy and reliable method compared to older tools.</span></p>
+<h3><span>Extracting Stored Credentials from mRemoteNG Configuration</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M mremoteng</pre>
+<p><span>This command targets the <strong>mRemoteNG</strong> application, a remote connection manager commonly used by sysadmins. The <strong>NetExec mremoteng</strong> module searches for configuration files like <strong>confCons.xml</strong>, decrypts stored credentials using known static keys, and displays them in cleartext for further use.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjt0IM3lSWs62voDCyDCXWLSHEu7i2w9p17aNNiErwDBgQBDeTo7Hrc8QrAHG7C8sta_vSFtrGS5Tb2_QWAUM6EPl4zv7yHaorOtqH9iKUeD8CHdwHmmnDZL-6GcmV_Ujda36ZMIY4uKs-06Jb4UJOE834959Ua-JSQ0LiFgjycfBU7vyPb99gHzawn4sPT/s16000/9.png"></span></p>
+<p><strong><span><em>Why It’s Effective:</em></span></strong></p>
+<p><span>Admins often store high-privilege credentials or reuse passwords in remote session managers for convenience. If <strong>mRemoteNG</strong> is found, the dumped credentials could include <strong>Domain Admins</strong>, <strong>service accounts</strong>, or other privileged users, enabling immediate lateral movement via <strong>WinRM</strong>, <strong>RDP</strong>, or <strong>SSH</strong>.</span></p>
+<h3><span>Retrieve PuTTY Private Key Files</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M putty</pre>
+<p><span>This command uses NetExec’s <strong>putty</strong> module to locate and extract <strong>SSH private keys</strong> stored by <strong>PuTTY</strong>, a popular SSH client for Windows. It searches both the Windows registry (<strong>HKCU\Software\SimonTatham\PuTTY\Sessions</strong>) and disk files (commonly in <strong>.ppk</strong> format), retrieving saved hostnames, usernames, and private keys (either encrypted or plain).</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh5iY4ZxKJBhf-119lKrP0zL4xhkfl5InL1GXKmWPDJ4ArOsEN1N60K2ltAZxf09LpFsqU55qzT6XID-PRJdxndjkMr7Ec4PkCuNPe_3ig0_2iHp19xWlzs2ePpRrETBxjDPF9o0hyaJ9d0_XYOah1VCrgtoEkK9QO5qyrj8bBAuvWjJuW73RDBS-iAUipg/s16000/10.png"></span></p>
+<p><span><strong><em>Why It’s Effective:</em></strong></span></p>
+<p><span>Admins often use <strong>PuTTY</strong> to manage <strong>Linux servers</strong> or network devices, and private keys may be stored with weak or no passphrases. If SSH keys are reused across different environments, this allows attackers to gain <strong>SSH-level access</strong> without needing a password.</span></p>
+<h4><span>View the Dumped Key Locally</span></h4>
+<pre>cat 'putty_IEUser_UbuntuKey_2025-05-22_175949.sec'</pre>
+<p><span>Displays the extracted private key or passphrase information. Test the extracted SSH keys on accessible targets using ssh -i for Linux or tools like <strong>Plink</strong> or <strong>WinSCP</strong> for Windows.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBkEstqOtq1aJT8WFlw5UslY_ZU4IBFvXtSoGEhgL3LZF8CL4x5KiIGhwPdIv17khCtW65TbGs2F230z3RIes1ra3rSecTj18A2_wmnX4G5r47tXwgIPOvXrkNFwXp6AkgCbwlQrwcb4DSE9Fl3RW-UZAVidKGcdiTdD8Ff5M6ol31D1j4RB8anvjW4dHH/s16000/11.png"></span></p>
+<h3><span>Extract Notepad++ Session Logs</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M notepad++</pre>
+<p><span>This command uses <strong>NetExec’s notepad++ module</strong> to locate session data, configuration files, or backups saved by <strong>Notepad++</strong>, a popular text editor. While Notepad++ isn’t designed for credential storage, its autosave feature may inadvertently retain <strong>passwords in scripts</strong>, <strong>open files with sensitive data</strong>, or even <strong>clipboard history</strong>.</span></p>
+<p><span><img alt="credential dumping with NetExec" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwDWI2gD6WPMlowKhgXDBKAnMbpaOuDuPIbF7RsOgV70dAj3K16lxJUUS6DtFZgsXgrLsCq15ICvP5ASidymnGe2mexwoYa7MEq5QKwoUiN2LNYRze3J0ImHh0FDRkadnuF5xOOAz28b-Ks0eD4euG_9Y32rPYvzHfFw1sXK4fPfio1NgQ0kFHkHhrx3GX/s16000/12.png"></span></p>
+<p><strong><span><em>Why This Matters:</em></span></strong></p>
+<p><span>Developers, sysadmins, or red teamers may temporarily store secrets in Notepad++ while working. Session recovery or backup files can persist even after the editor is closed and can be accessed via <strong>SMB</strong> if you have proper credentials and share access.</span></p>
+<p><span><em><strong>Note</strong>: This step enhances reconnaissance in the credential harvesting process, and while not always successful, it can uncover valuable assets such as access tokens, database connection strings, and SSH or admin credentials embedded in plaintext scripts.</em></span></p>
+<h3><span>Retrieve PowerShell Command History</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M powershell_history</pre>
+<p><span>This command uses the <strong>powershell_history module</strong> in <strong>NetExec</strong> to retrieve and analyze PowerShell command logs from a target user’s system.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKYUKQ19p0cFMApk1s1k78pcmPiV7DepjVBldkX2D_v0e8SzV3mxpGrkYSgDR_4svhnm9ILQ9PV5eeJ9qcBGmjNn2mZ-XMGcAMlJo7L4bR1e5v2oVQEp4D6mI6aD8FsFIsNrpaEu3lBauBBWAnDv8mxSJXghkNPVCYY3FSv1pqnUVAH_UkWSwzYWqUmbUR/s16000/13.png"></span></p>
+<p><span>By default, PowerShell stores command history in:</span></p>
+<pre>C:\Users\IEUser(user)\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt</pre>
+<p><span><strong><em>Why This Is Valuable</em></strong></span></p>
+<p><span>Attackers, admins, or developers frequently run credential-related commands in PowerShell, such as net use commands with hardcoded passwords, AD enumeration tools with -Credential arguments, or commands like Set-ADAccountPassword and New-ADUser. If not cleared, these commands are logged and can be retrieved to gain access to sensitive information.</span></p>
+<p><span><em><strong>Note</strong>: PowerShell history can expose plaintext credentials or system details, enhancing post-exploitation by enabling lateral movement or privilege escalation based on user activity.</em></span></p>
+<h3><span>Extract WinSCP Configuration Files</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M winscp</pre>
+<p><span>This command uses <strong>NetExec’s winscp module</strong> to extract saved <strong>WinSCP site profiles</strong>, which may include <strong>remote hostnames, usernames, passwords</strong> (in plaintext or Base64), and <strong>SSH keys</strong>, stored either in the <strong>WinSCP.ini</strong> file or the <strong>Windows Registry</strong>, potentially allowing attackers to access <strong>FTP/SFTP/SSH</strong> targets, extract data, or deploy payloads.</span></p>
+<p><span><img alt="credential dumping with NetExec" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEisgAO3aEPpMZj30yVItYuhX2iCGtgwHpb6EIrOylxa_c-NRHwovIdk9qtt3teHX3xyknOuSWWqC8LtnlL67a6qzIz8p1gTNg59z1wzRyJ1owp_-O0_kKHOysEOF9GQTcA-F7hvq0V9O53gvGR_DUHG0jgjbqP2TJEG1Y33lymNo-Rr8uiCguurn_ruE9Ck/s16000/14.png"></span></p>
+<h3><span>Dumping VNC Passwords</span></h3>
+<pre>nxc smb 192.168.1.80 -u ieuser -p 123 -M vnc</pre>
+<p><span>This command uses <strong>NetExec’s vnc module</strong> to search for stored <strong>VNC credentials</strong> on the target machine, scanning common registry keys or configuration files where VNC clients (like <strong>UltraVNC</strong>, <strong>RealVNC</strong>, and <strong>TightVNC</strong>) often store access passwords, which may be poorly encrypted or even in plaintext. It looks in locations like:</span></p>
 <ul>
-<li><span>Encrypts more data than most competitors (including subject lines).</span></li>
-<li><span>Generous free plan with decent storage.</span></li>
-<li><span>Affordable premium options compared to others.</span></li>
-<li><span>Strong stance on privacy (fully ad-free, no third-party involvement).</span></li>
-<li><span>Open-source and regularly updated.</span></li>
-<li><span>Clean, simple interface with encrypted calendar integration.</span></li>
+<li><span><strong>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\WinVNC3\Password</strong></span></li>
+<li><span><strong>HKEY_LOCAL_MACHINE\SOFTWARE\RealVNC\vncserver</strong></span></li>
 </ul>
-<h5><span><strong>Cons</strong></span></h5>
+<p><span>NetExec attempts to decode any found credentials.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjfuFb0eQhVezDXOPQos062dCOS9w599TAlAYoQp8b4PsxqocjRSpna0gPASrkFwGSVyuoqaUaQt7jcGI_Q6k2ZGcaalMDPoOsi4V0OmmHgIb63DpnAH7xrhIF3aG5nTeiIfB-voh2n-LjHFEz-DAelLNgFr4zK6eZNIGudNoUa6-tSmoNuzLrf6wWUWy5V/s16000/15.png"></span></p>
+<p><strong><span><em>Why This Is Important:</em></span></strong></p>
+<p><span><strong>VNC</strong> provides remote desktop access, and if passwords are extracted from the registry or config files, attackers can access systems without needing valid user credentials. These passwords are often reused across multiple systems, enabling <strong>lateral movement</strong> and maintaining <strong>persistence</strong> on the network.</span></p>
+<p><span><em><strong>Note</strong>: Harvesting VNC credentials lets attackers bypass Windows authentication, often found in exposed legacy systems or unmanaged remote support setups.</em></span></p>
+<h3><span>Extracting Wi-Fi Credentials</span></h3>
+<pre>nxc smb 192.168.1.46 -u administrator -p 123 -M wifi</pre>
+<p><span>This command uses NetExec’s <strong>wifi</strong> module in order to extract stored Wi-Fi credentials (SSIDs and PSKs) from a target Windows machine by querying <strong>PowerShell</strong> or reading registry paths. Thereby allowing attackers to access internal networks, pivot to insecure Wi-Fi zones, and reuse credentials for other access.</span></p>
+<p><span><em> <img alt="credential dumping with NetExec" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiyTClSBr5h5f6TZRWMg4tPh9Q_g1GauTZGnGWR_lJT0aIgwKqPNsmR4_MB8_Fg92A_jlqPkZTbOOX5ad6fygg9aIV5ueo_p_uWWPy1QDF0mLOThctwfNxoQ-2m0tKqi3rPwgvn55q31mMAZhkrdxDouKT9_8NQvQcSVeN2Sn5gfEyp6lplYjzKR1GMc7I9/s16000/16.png"></em></span></p>
+<h3><span>Dumping Backup Operators Permission</span></h3>
+<pre>nxc smb 192.168.1.53 -u raj -p Password@1 -M backup_operator</pre>
+<p><span>This command uses <strong>NetExec’s -M backup_operator module</strong> to check if a user (e.g., <strong>raj</strong>) is a member of the <strong>Backup Operators</strong> group. Similarly checks whether they can read sensitive files, such as <strong>SAM</strong>, <strong>SYSTEM</strong>, <strong>SECURITY</strong>, and <strong>NTDS.dit</strong>, which are typically restricted to administrators.</span></p>
+<p><span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgK79XdxEdnnjWPocur1JLkENhkGTzwLzG-5XI4K4Z9o8z2T-Ez-yx_DufKOtSxLWnxUfuLWX5lyIGkHvJZl_kJ4hAKmdQpxaInadYd_34IeRjO7AJd7AjaixKVUlZQT-9goFMVE5-bFucg3QaU4Gnfg-hkkRk9xOv0BY7zGCebz96HEfqMVd4efmHuHi-5/s16000/19.png"></span></p>
+<p><strong><span><em>Why This Matters:</em></span></strong></p>
+<p><span><strong>Backup Operators</strong> have the ability to bypass file system permissions for backup and restore operations. Even without admin rights, a user in this group can:</span></p>
 <ul>
-<li><span>Slightly less user-friendly for beginners compared to Proton Mail.</span></li>
-<li><span>Limited integration with third-party email clients (IMAP support requires bridge, paid feature).</span></li>
-<li><span>Smaller ecosystem compared to Proton (no VPN or drive).</span></li>
-<li><span>Free accounts may face restrictions (like fewer aliases).</span></li>
-<li><span>Some advanced features require premium subscription.</span></li>
+<li><span>Extract the <strong>dit</strong> database</span></li>
+<li><span>Access <strong>SAM</strong> and <strong>SYSTEM</strong> hives</span></li>
+<li><span>Bypass certain system protections</span></li>
 </ul>
-<h4><span>Step-by-Step: Create a Privacy Email with Tutanota</span></h4>
-<h5><strong><span>Step 1: Go to the Tutanota Website</span></strong></h5>
-<p><span>Visit: <span><strong><a href="https://tutanota.com">https://tutanota.com</a></strong></span></span></p>
-<h5><span><strong>Step 2: Click “Sign Up”</strong></span></h5>
-<p><span>On the homepage, click the “Sign Up” or “Get Secure Email” button.</span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj-AMEIQ4LopwTjGOLuupbHGr_FYgAKI77K83BTYH_-5wCA41sqBl21oy24FNp9deypaU9niPINnMgHHh26ug9-l1dBsoPbiWbVAWbTzCTePprtXz_7JM8RqWodmlTdzb7wEaOib_mF_e1akyzFGgu6Ct9infUGoucs2li_CegAL0JA48dUapISbr3ZZNpd/s16000/1.png"></p>
-<h5><span><strong>Step 3: Choose Your Plan</strong></span></h5>
+<p><span>This makes a low-privilege user in the <strong>Backup Operators</strong> group a significant <strong>domain takeover</strong> vector.</span></p>
+<p><span><em><strong>Note</strong>: Backup Operators are a high-risk group in misconfigured AD setups and should be treated as privileged, with regular membership audits.</em></span></p>
+<h3><span>Dumping NTDS.dit Using an Authenticated User</span></h3>
+<pre>nxc smb 192.168.1.53 -u yashika -p Password@1 --ntds</pre>
+<p><span>This command uses <strong>NetExec</strong> to dump the <strong>NTDS.dit</strong> file. This file contains critical Active Directory data such as <strong>usernames</strong>, <strong>NTLM password hashes</strong>, <strong>group memberships</strong>, and <strong>domain trust details</strong>. NetExec automates the process by using <strong>Volume Shadow Copy</strong> and exporting the <strong>SYSTEM hive</strong> to decrypt the hashes.</span></p>
+<p><span><em> <img alt="credential dumping with NetExec" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi6vqjJFSSxfE4PABMBRRuM9G6vHphWmRmMbkA_Oxdu_1Do7eOJN0w1JlpxZOcpQbjfHGETvNvJm9OZV926nTqRtUK6Y_07XqOO46nM6MQaOpitRDDH6ZXvPCQqK0s1PruIi1-PfrwWQCdA9A4BGgQcHsyHyDOmODRE2jV6QPOiMdoPqpPYSh9fGfyYKhJN/s16000/20.png"></em></span></p>
+<p><strong><span><em>Why This Matters:</em></span></strong></p>
+<p><span><strong>NTDS.dit</strong> is essential for attackers in a Windows domain. Extracting it allows for <strong>offline cracking of domain hashes</strong>, <strong>Pass-the-hash</strong> attacks, and provides <strong>full control</strong> over all domain users, including <strong>administrators</strong> and <strong>service accounts</strong>, making it a key step in red team operations or APT engagements.</span></p>
+<p><span><em><strong>Note</strong>: The NTDS.dit dump enables domain-wide credential exfiltration, allowing attackers to crack weak hashes, reuse them in <strong>Pass-the-Hash</strong> attacks, or forge <strong>Golden Tickets</strong> with <strong>krbtgt</strong> credentials.</em></span></p>
+<h3><span>Extract gMSA Credentials</span></h3>
+<pre>nxc smb 192.168.1.53 -u komal -p Passwor@1 –gmsa</pre>
+<p><span>This command uses <strong>NetExec</strong> to enumerate <strong>Group Managed Service Accounts (gMSAs)</strong> from Active Directory, retrieving their <strong>account names</strong>, <strong>Kerberos keys</strong> (plaintext or hashes), and related metadata if permissions allow.</span></p>
+<p><span><em> <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwgnpb69A3PtjecsawjXTEf8ftZEpS2XD8yCWUsIXfvK8oipa_HoJyKmzdu-a_u-O2d7unBMDShp6iQ1UUfJdXNXnKG6NFOuUQh45vEZVL-d3c6J72hpmxHziKkH3Y88uNWp7DZIGFMLeY9B3Ad4W8qgxl_qzYulixSCKjCpdsuBc3JPMUksmTkwAWq_w2/s16000/21.png"></em></span></p>
+<p><strong><span><em>Why This Matters:</em></span></strong></p>
+<p><span>Dumping a gMSA’s secret lets attackers <strong>impersonate the account</strong>, gain <strong>lateral movement</strong>, and <strong>authenticate to services</strong> like MSSQL or IIS for further internal attacks.</span></p>
+<h3><span><span>Retrieve LAPS Password via NetExec (nxc)</span> </span></h3>
+<pre>nxc smb 192.168.1.53 -u komal -p Passwor@1 -M laps</pre>
+<p><span>This command uses NetExec’s <strong>-M laps module</strong> to target <strong>Microsoft LAPS</strong> (Local Administrator Password Solution), which stores unique local admin passwords in Active Directory. Specifically, It attempts to query the <strong>ms-Mcs-AdmPwd</strong> attribute of computer accounts to retrieve the current local admin password.</span></p>
+<p><span><img alt="credential dumping with NetExec" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgH6VH3byuH7yk8dMe6CVAYvEFsDs_PncUEHpGmFlfMgZrhR3vi_Neg48XSqTA8Pvnlkv1WPNvP_ePqH4UUpgp49vsBM5Y3xApMFbxMDqAsl3ASm9uMYxlvjW2LG9YRKBOywxeV4Xupmt4avqz9jxcYqftWqAGHydONx71okKT1aQDwcB6sw63a6nmSqb0o/s16000/22.png"></span></p>
+<p><strong><span><em>Why This Matters:</em></span></strong></p>
+<p><span>If successful, it provides <strong>local admin access</strong> to target machines using their LAPS-managed password. It enables <strong>privilege escalation</strong> and <strong>lateral movement</strong> across the network via <strong>SMB</strong>, <strong>PSExec</strong>, <strong>WinRM</strong>, etc., effectively granting full control over the machine.</span></p>
+<p><span>Would like to learn more about credential dumping. Please see the information provided <span><a href="https://www.hackingarticles.in/category/credential-dumping/">here</a></span>.</span></p>
+<h3><span>Mitigation</span></h3>
 <ul>
-<li><span>Free Plan is available, but you can choose Premium if you want more features (custom domain, aliases, more storage, etc.)</span></li>
-<li><span>Click “Select” under the plan you want.</span></li>
+<li><span><strong>Segregate SMB access</strong>: Especially remote registry and file share access for low-privilege accounts.</span></li>
+<li><span><strong>Monitor access</strong>: Alert on LSA, SAM, or registry accesses via SMB.</span></li>
+<li><span><strong>Limit stored credentials</strong>: Encourage disabling auto-login and removing saved sessions in apps.</span></li>
+<li><span><strong>Restrict roles</strong>: Minimize Backup Operator and gMSA membership.</span></li>
+<li><span><strong>Validate file access</strong>: Detect unusual WinSCP, PuTTY, VNC config access patterns.</span></li>
 </ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjlWObd0X0AC1bjvILjOhhyphenhyphenR8wfwuXfq_dDPUcSEptRhSzyV9QD_bFAA7Kh0maaK41vbkY7xGvoDXU82XtPZM2SQjXVBnaNFZCqxSJAwxVHNsAiIFGZwlF3r4fvr_FVzWlwIqs4TGuXkEG4w2OKNmrPcI45VtRNu0gMBWcgkXb3oDaokp2TuZ07jp2XmJFf/s16000/2.png"></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjlWObd0X0AC1bjvILjOhhyphenhyphenR8wfwuXfq_dDPUcSEptRhSzyV9QD_bFAA7Kh0maaK41vbkY7xGvoDXU82XtPZM2SQjXVBnaNFZCqxSJAwxVHNsAiIFGZwlF3r4fvr_FVzWlwIqs4TGuXkEG4w2OKNmrPcI45VtRNu0gMBWcgkXb3oDaokp2TuZ07jp2XmJFf/s16000/2.png"></p>
-<h5><span><strong>Step 4: Choose Your Email Address</strong></span></h5>
-<ul>
-<li><span>You’ll pick a username, like yourname@tutanota.com</span></li>
-<li><span>Choose from domain options:</span></li>
-</ul>
-<p><span>@tutanota.com</span></p>
-<p><span>@tutamail.com</span></p>
-<p><span>@tuta.io</span></p>
-<p><span>@keemail.me</span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgsUIvWXnFHbG1Emq546Seav2s4xiWDLNAB5l-Ysp1gVOYRgef-8l4TgixFDgm_x4lVDXz0AQludTi46nm6kq1kVuNBw2_0aP4L-D2InOQTQ0sFM2uXuqcZzo9A6to5l6sQHSQ2xezC27gb9SCkEbjc9_vht7Tz5aDfxrNnbwQkECIkY3s9ISB-OltTGYZ_/s16000/3.png"></p>
-<h5><span><strong>Step 5: Set a Strong Password</strong></span></h5>
-<ul>
-<li><span>Choose a very strong password (use a password manager)</span></li>
-</ul>
-<p><span>Tutanota does not allow password recovery (to protect your privacy), so write it down or store it securely.</span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjrwbCjc_nzj7uKhyphenhyphen_Oj72TX0tztYdRy2u_KP8sPB2eQOMfgdHlivBsB-nurJnuSzItIOUjJupxzE_LMwObxe5A89H_S95Jl-iQzD25KdfW57-XLkwKMyVh09go6WEFx3p4OJsUswr63ufqLJ5B7Sl-JxPghUDHkBdr88AU6_WeYGPZaFVov13G0Pql9mq9/s16000/4.png"></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgBh6Z1odxfskXi5kO2zKtlo2Wklt4BI76LkYdZOpINXd_Sk921JgvvS7M3JHKiJy3XIiUfxIouJDN3Q3dfY2r1-TBgaj1x51wyqnJBXlb_dwOiWwFejRwyCvhIGnBKo1SU2-MM3Sh9kdiXX8LS_K5FN2opIusOa4836miFo5t_inmmX__1uRx7LiT3mqej/s16000/5.png"></p>
-<h5><span><strong>Step 6: Solve CAPTCHA and Confirm</strong></span></h5>
-<ul>
-<li><span>Complete the CAPTCHA to prove you’re not a bot.</span></li>
-<li><span>Read and accept the terms of service and privacy policy.</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgqnBvO4cOhVnkkGO8EDluLoOajHpvnrGPbqjEd6GJ1LyB6Qq-dE6QoAWxIaIs9DFwZp65Hx-NpxE9P2G3QB513vL75K9TkcmRJeXLG-UTR9EMktX7aMnIpj-aG-79GKkJlDdpIhc2UEvqGendt448p1jGNh0wKoEb24Bq0QeViORXO1Km6a6MoOTzMsLXI/s16000/6.png"></p>
-<h5><span><strong>Step 7: Wait for Activation</strong></span></h5>
-<p><span>Tutanota may take a few minutes to activate your account.</span></p>
-<p><span>In some cases, they use a short waiting time (rate-limiting to prevent abuse).</span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiFSZvAWfWe-pM2Ej1BfsJ8fYtaSAq4X6HgKJw-TqqFkCXCzop9C8Br9LheffQ1ZD_mHpLA2oKX0CbIfKr51OTL7C_cDJBO3tzo1QJggiZLgILAEry9V1LgjbHFJJdpTTJabOLLbg6H68thvkyjhW9gs9s74yKNImASqFH9HQsz85vAlsKEwFnpTjz-4Uou/s16000/7.png"></p>
-<h5><span><strong>Step 8: Log In</strong></span></h5>
-<ul>
-<li><span>Once activated, log in at <span><strong><a href="https://mail.tutanota.com">https://mail.tutanota.com</a></strong></span></span></li>
-</ul>
-<p><span>You’ll see your inbox, settings, and secure calendar.</span></p>
-<h5><span><strong>Step 9: Send Your First Encrypted Email</strong></span></h5>
-<ul>
-<li><span>To a Tutanota user: Emails are encrypted by default.</span></li>
-<li><span>To non-users: You can send an encrypted message with a password. They’ll receive a link and can enter the password to view it securely.</span></li>
-</ul>
-<h5><span><strong>Step 10: Set Up Two-Factor Authentication (2FA)</strong></span></h5>
-<ul>
-<li><span>Go to Settings &gt; Login &gt; 2FA</span></li>
-</ul>
-<p><span>Use an authenticator app like Authy or Google Authenticator to add extra protection.</span></p>
-<h3><span>Proton Mail</span></h3>
-<p><span>Proton Mail is a privacy-focused, end-to-end encrypted email service founded in 2014 by scientists at CERN (Switzerland). It’s designed to protect user data from surveillance, hackers, and advertisers.</span></p>
-<h5><span><strong>Key Features</strong></span></h5>
-<ul>
-<li><span>End-to-End Encryption (E2EE): Only sender &amp; recipient can read messages.</span></li>
-<li><span>Zero-Access Architecture: Even Proton Mail can’t read your emails.</span></li>
-<li><span>Open Source &amp; Audited: Transparent and community-trusted.</span></li>
-<li><span>Swiss Jurisdiction: Strong privacy laws, outside U.S. &amp; EU surveillance alliances.</span></li>
-<li><span>No Logging of IPs: Optional — keeps your identity anonymous.</span></li>
-<li><span>Self-Destructing Emails: Messages can auto-delete after a set time.</span></li>
-<li><span>Custom Domains (Paid Plans): Use your own email domain securely.</span></li>
-</ul>
-<h5><span><strong>Pros</strong></span></h5>
-<ul>
-<li><span>Strongest privacy laws (Switzerland).</span></li>
-<li><span>Easy-to-use apps (Web, Android, iOS).</span></li>
-<li><span>Free tier available.</span></li>
-<li><span>Trusted by journalists, activists, and security professionals.</span></li>
-</ul>
-<h5><span><strong>Cons</strong></span></h5>
-<ul>
-<li><span>Limited storage on free plan</span></li>
-<li><span>Some advanced features require premium.</span></li>
-<li><span>Emails to non-Proton users may need password protection for E2EE.</span></li>
-</ul>
-<h4><span>Step-by-Step: Create a Privacy Email with Proton Mail</span></h4>
-<h5><span><strong>Step 1: Go to the ProtonMail Website</strong></span></h5>
-<p><span>Open your browser and go to: <strong><span><a href="https://proton.me/mail">https://proton.me/mail</a></span></strong></span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEipJBYj6D9gPlIuFotRl0cmBOHIHzAbIwOwDaJMu1VMjH0vm1I-XgvsZJUYqVej2-q2I_MgrhM9nPhEdhOthoaUUaohO6s2WCGfHfgbmgEjANgij8juZraZJC9nn397CWudLfQkw58ws_g1tfBjpE_5SNbdSvcx6ZOTIoAhgjUOzkeOtHIgQzBFfq9yZTk0/s16000/11.png"></p>
-<h5><span><strong>Step 2: Click “Create a Free Account”</strong></span></h5>
-<p><span>Click the “Create a free account” button on the homepage.</span></p>
-<h5><span><strong>Step 3: Choose Your Plan</strong></span></h5>
-<ul>
-<li><span>Scroll down and choose the Free plan (you can upgrade later if needed).</span></li>
-<li><span>Click “Get Proton Free”.</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimaR7wDqZ5pApaXd08mSXRHpNYbRe4Xf_yPIBBHlNV_gGQGXh8eY-wxy5n-VUOAZHlThyphenhyphen64ZMe9kxDdwYD3KX9wDbrR7WIIcALm65k3pQqVan0ne7aei13Di5le0XchrbV20yBk0irmw80-8NsG4WhAO2H_25dmrmOm1H0Ic426A_QEZNHOIJOKK2WoUH2/s16000/12.png"></p>
-<h5><span><strong>Step 4: Pick Your Email Address</strong></span></h5>
-<ul>
-<li><span>You’ll be asked to choose a username:</span></li>
-</ul>
-<p><span>Example: yourname@proton.me or yourname@protonmail.com</span></p>
-<ul>
-<li><span>You can choose between:</span></li>
-</ul>
-<p><span>@proton.me <em>(default and short)</em></span></p>
-<p><span>@protonmail.com <em>(classic)</em></span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEivz0bZFtGDZfssh16rRAFriRcmbNZIBabM8mybf0MBFlLe_yuRwercpup7i-11J4bDXLqpZi3tcZVZWID1LKuoSI4T45a8mcT9a3gE16afK1SY4yoVGFOGkzlMNHW-YQ2RdRak5Jci3uUh2El2X_Dv5pgXWZ6Y8xdhA4_n1L_GIfcocLPIdGNETUZ1s5z2/s16000/13.png"></p>
-<h5><span><strong>Step 5: Create a Strong Password</strong></span></h5>
-<ul>
-<li><span>Kindly create a robust password containing a minimum of 12 characters, incorporating a combination of uppercase and lowercase letters, numbers, and special symbols.</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg5zQ8pD5vlDGGH9ybnWgp_QJMQhsTwylVc3xgj5maVxFq8M9h4RvvI3fT28sooGfkN6Tm-Ro94zItkv2D8oRW9bvbf3dOK8xUQhUBFLcEykxZGCLVYSiTe3yxLousNSkdS3znd86OBjygy8_q2AH2mBNs0U0FpQtZktvbI_H8IAsgYYe__aUv7T693bdhH/s16000/14.png"></p>
-<h5><span><strong>Step 6: Human Verification (CAPTCHA)</strong></span></h5>
-<ul>
-<li><span>Complete the CAPTCHA (puzzle or image selection).</span></li>
-<li><span>Proton may ask for human verification:</span>
-<ul>
-<li><span>via email or SMS</span></li>
-<li><span>Choose whichever you’re comfortable with.</span></li>
-</ul>
-</li>
-</ul>
-<p><span>This step helps prevent spam accounts.</span></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh8LLVNNTqbPXTXLF_hposRxyfBE1tmSrhyhtqYHo6fC_bi7RE45EEKakKRgzdMq7uZpLJnOp7YVQwUiKZHbTkzNXD9D7UajpF3iQC0KXqpJUtqiisW-Wgbr1zwnm0QpjLTtpVj_kVVlbqhWCmSA1iO8s_ycNyIV1yZ6MSWgyR98KM9_23FoKxiFOcyeTKU/s16000/15.png"></p>
-<h5><span><strong>Step 7: Confirm and Create Account</strong></span></h5>
-<ul>
-<li><span>Click “Create Account” to finalize everything.</span></li>
-<li><span>Wait a few seconds — your inbox will load.</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjtx_grbO4Vk3wRqXl8a5aT4N3belWnF_zlw_fGU9KZx6xRRaqlLZEcKPBIP5bLEgNXxv-DR_abVAowGniIkKIwVEnKkpXFstuZZluUAOLJecbNcqv5G9NeQIx5HOe1DTB7RHRgCL02AjFGY0lUbP1oajmeG-Lce6jTZ-6IE6ZocfxjMDVRsSKl0O5hJ7PA/s16000/16.png"></p>
-<h5><span><strong>Step 8: Explore ProtonMail Inbox</strong></span></h5>
-<p><span>You’ll now be inside the secure ProtonMail environment:</span></p>
-<ul>
-<li><span>Use it like a normal email service — compose, receive, organize emails.</span></li>
-<li><span>It’s encrypted and private by default.</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjTMjlHdALONG_GtAxvnxQEicgqAkiuXE2aW79D12OEiQVKKcJrh2a75t8C7Ol-L5JCWRuHTo3pQev5iwtZYLO7TYda_0osTy7z9WQJHXGIjFWLczH1s9CfYpftTyh_V11lS_opiKWKApXjYXtVhCphiDuIAaQ1qu7TYo19Fi-0x-kkg-Pw0rRL1N9F48Xd/s16000/17.png"></p>
-<h5><span><strong>Step 9: Secure Your Account</strong></span></h5>
-<p><span>Before you start using it fully, do the following:</span></p>
-<p><span><strong> Enable Two-Factor Authentication (2FA)</strong></span></p>
-<ul>
-<li><span>Go to Settings &gt; All setting &gt;Account &amp; password &gt; Two-factor authentication</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgyQEif2MBEBLwKnVpebkk4fVvGAS4a-o9RygaW6mkpdChlSZImvTUOsOX0aryYFDTfl0TkD0z33U5IpL5ggBXr1JrSpOySVp6w7HnspTHVt5Jpg_KHUhWRLOCKqqEG5L-RdV3jHFTqtLEsrc8CfNbqn1wpNXMKUTzp9CDD8CRK2l_FZahu0JAfq4jRq9iC/s16000/18.png"></p>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhOyfCbF-vjGmQnuimM_gIYjVjgc2pnp2yIwL-zW03sRhd59sTsrZ8smd4FMyNNP26lz8smKR4phMSNRSbh-1mUKd94W_l5rA0KrzGNz0byUl6WKtw1vXaP8XdX79-IiorvuIeyn6GBVu8iJac1YqGFYTTs638wjBK3riqAwyItVaq6twV8AJ2saUDhdPBy/s16000/19.png"></p>
-<p><span><strong> Set Your Display Name</strong></span></p>
-<ul>
-<li><span>This is what recipients will see in their inbox</span></li>
-<li><span>Go to Settings &gt; Account &amp; password &gt; Display Name</span></li>
-</ul>
-<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjVyodXiLyCxHAX3m3r-Efuofo4JzBLFycDhEujVKSsuzHeCPLCDfBX_TK-9TGwcEVUczy0LiIc7yjXlfDGTN5DnRPIx3KQMaptFi9Dvqt0tmiVgmsBL9OZyiZizfZWTurBYJWjprUeg_RFsl0z-vLxuz2vPNdsLCOvF4WQRvLI6QV12u1280nYAaF35mrt/s16000/20.png"></p>
-<h3><span>Other Secure Email Providers</span></h3>
-<p><span><strong>For those seeking to further enhance secure email communication, additional privacy-focused providers worth exploring include:</strong></span></p>
-<ul>
-<li><span><strong>StartMail – </strong>A service emphasizing strong encryption and user-friendly privacy tools. <span><a href="https://www.startmail.com"><strong>https://www.startmail.com</strong></a></span></span></li>
-<li><span><strong>Disroot – </strong>An open-source, community-driven platform committed to transparency and security.</span><br>
-<span><a href="https://disroot.org"><strong>https://disroot.org</strong></a></span></li>
-<li><span><strong>Mailbox.org – </strong>A robust, business-ready solution offering comprehensive encrypted email and productivity features.<strong><br>
-</strong><span><a href="https://mailbox.org"><strong>https://mailbox.org</strong></a></span></span></li>
-</ul>
-<h3><span>Future of Privacy in Email Communication</span></h3>
-<ul>
-<li><span>Wider adoption of end-to-end encryption by default.</span></li>
-<li><span>Growth of decentralized and blockchain-based email solutions.</span></li>
-<li><span>Stronger protection against metadata tracking.</span></li>
-<li><span>Integration with privacy-focused communication platforms.</span></li>
-<li><span>Increased pressure on providers to ensure transparency and zero-logs.</span></li>
-<li><span>Rising demand from users for simple yet highly secure email options.</span></li>
-</ul>
-<h3><span>Conclusion</span></h3>
-<p><span>Privacy is not about concealing wrongdoing; it is about preserving individual freedom, safeguarding personal security, and maintaining control over one’s digital identity. In a world where data has become the most valuable currency, choosing secure communication tools is no longer optional — it is a necessary step toward ensuring autonomy and resilience in the digital age.</span></p>
-<p><span>To learn more on Open-Source Intelligence (OSINT). Follow this <strong><span><a href="https://www.hackingarticles.in/category/osint/">Link</a></span></strong></span></p>
-<p><span><strong>Author</strong>: Muskan Sen is a Researcher and Technical Writer specializing in Information Security. Follow her – <span><strong><a href="https://www.linkedin.com/in/muskan-sen/">Linkedin</a></strong></span></span></p>
+<p><span><strong>Author</strong>: MD Aslam drives security excellence and mentors teams to strengthen security across products, networks, and organizations as a dynamic Information Security leader. Contact </span><strong><a href="https://www.linkedin.com/in/md-aslam-7b04ab144">here</a></strong></p>
 <div>
 
 <h3>Related posts:</h3>
 <div>
-<a href="https://www.hackingarticles.in/privacy-protection-file-encryption/" title="Privacy Protection: File Encryption">
-<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>Privacy Protection: File Encryption</span></a>
-<a href="https://www.hackingarticles.in/privacy-protection-file-sharing/" title="Privacy Protection: File Sharing">
-<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>Privacy Protection: File Sharing</span></a>
+<a href="https://www.hackingarticles.in/credential-dumping-ad-user-comment/" title="Credential Dumping: AD User Comment">
+<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>Credential Dumping: AD User Comment</span></a>
+<a href="https://www.hackingarticles.in/readgmsapassword-attack/" title="Credential Dumping: GMSA">
+<span><img alt="Default Thumbnail" src="https://www.hackingarticles.in/wp-content/plugins/yet-another-related-posts-plugin/images/default.png"></span><span>Credential Dumping: GMSA</span></a>
 </div>
 </div>
 </div>
@@ -295,7 +216,7 @@
 
 
 <h2>Post navigation</h2>
-<div><div><a href="https://www.hackingarticles.in/aws-ec2-credentials-theft-via-ssrf-abuse/">AWS EC2 Credentials Theft via SSRF Abuse</a></div><div><a href="https://www.hackingarticles.in/privacy-protection-instant-messaging/">Privacy Protection: Instant Messaging</a></div></div>
+<div><div><a href="https://www.hackingarticles.in/active-directory-enumeration-ldeep/">Active Directory Enumeration: ldeep</a></div><div><a href="https://www.hackingarticles.in/privacy-protection-file-encryption/">Privacy Protection: File Encryption</a></div></div>
  </div>
 </div>
 
