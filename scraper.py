@@ -1,5 +1,6 @@
+
 import requests
-from bs4 import BeautifulSoup
+import trafilatura
 import os
 import re
 import bleach
@@ -7,6 +8,7 @@ from database import get_db_connection
 from requests.adapters import HTTPAdapter
 from urllib3.util.connection import create_connection
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
 
 def sanitize_filename(filename):
     filename = re.sub(r'[^\w\s-]', '', filename)
@@ -76,45 +78,79 @@ def scrape_tutorial(url, pinned_ip=None):
             response = requests.get(url, timeout=15, allow_redirects=False)
         
         response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
+        html_content = response.content
         
-        title = soup.find('h1')
-        title_text = title.get_text().strip() if title else 'Untitled Tutorial'
+        # Use trafilatura to extract the main content
+        downloaded = trafilatura.fetch_url(url) if not pinned_ip else html_content.decode('utf-8', errors='ignore')
         
-        description_meta = soup.find('meta', attrs={'name': 'description'})
-        description = description_meta['content'] if description_meta else ''
+        # Extract metadata and content with trafilatura
+        metadata = trafilatura.extract_metadata(downloaded)
+        content_html = trafilatura.extract(
+            downloaded,
+            include_formatting=True,
+            include_links=True,
+            include_images=True,
+            output_format='html',
+            favor_precision=True
+        )
+        
+        # Fallback to BeautifulSoup if trafilatura fails
+        if not content_html:
+            print("Trafilatura extraction failed, falling back to BeautifulSoup...")
+            soup = BeautifulSoup(html_content, 'html.parser')
+            main_content = soup.find('article') or soup.find('main') or soup.find('div', class_='content')
+            
+            if main_content:
+                content_html = str(main_content)
+            else:
+                content_html = '<div><p>Content could not be extracted.</p></div>'
+        
+        # Get title and description from metadata or fallback to BeautifulSoup
+        if metadata and metadata.title:
+            title_text = metadata.title
+        else:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            title = soup.find('h1')
+            title_text = title.get_text().strip() if title else 'Untitled Tutorial'
+        
+        if metadata and metadata.description:
+            description = metadata.description
+        else:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            description_meta = soup.find('meta', attrs={'name': 'description'})
+            description = description_meta['content'] if description_meta else ''
         
         slug = sanitize_filename(title_text)
         
-        main_content = soup.find('article') or soup.find('main') or soup.find('div', class_='content')
+        # Sanitize the extracted HTML
+        allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                      'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'blockquote', 'div', 'span', 'table', 'tr', 'td', 'th', 'thead', 'tbody']
+        allowed_attrs = {'a': ['href', 'title'], 'img': ['src', 'alt', 'title']}
         
-        if main_content:
-            allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                          'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'blockquote', 'div', 'span']
-            allowed_attrs = {'a': ['href', 'title'], 'img': ['src', 'alt', 'title']}
-            
-            content_html = bleach.clean(
-                str(main_content),
-                tags=allowed_tags,
-                attributes=allowed_attrs,
-                strip=True
-            )
-        else:
-            content_html = '<div><p>Content could not be extracted.</p></div>'
+        content_html = bleach.clean(
+            content_html,
+            tags=allowed_tags,
+            attributes=allowed_attrs,
+            strip=True
+        )
         
-        img_tag = soup.find('img')
+        # Extract main image
+        soup = BeautifulSoup(html_content, 'html.parser')
+        img_tag = soup.find('img') or (soup.find('meta', property='og:image'))
         image_path = None
-        if img_tag and img_tag.get('src'):
-            img_url = img_tag['src']
-            if not img_url.startswith('http'):
+        
+        if img_tag:
+            img_url = img_tag.get('src') or img_tag.get('content')
+            if img_url and not img_url.startswith('http'):
                 from urllib.parse import urljoin
                 img_url = urljoin(url, img_url)
             
-            img_filename = f"{slug}.jpg"
-            save_path = os.path.join('static', 'images', 'tutorial_images', img_filename)
-            
-            if download_image(img_url, save_path, pinned_ip=pinned_ip):
-                image_path = f'images/tutorial_images/{img_filename}'
+            if img_url:
+                img_filename = f"{slug}.jpg"
+                save_path = os.path.join('static', 'images', 'tutorial_images', img_filename)
+                
+                if download_image(img_url, save_path, pinned_ip=pinned_ip):
+                    image_path = f'images/tutorial_images/{img_filename}'
         
         html_filename = f"{slug}.html"
         html_path = os.path.join('templates', 'tutorials', html_filename)
@@ -162,6 +198,8 @@ def scrape_tutorial(url, pinned_ip=None):
         
     except Exception as e:
         print(f"Error scraping {url}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def scrape_multiple_tutorials(urls):
