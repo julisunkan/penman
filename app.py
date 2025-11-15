@@ -163,5 +163,82 @@ def scrape_url():
     
     return redirect(url_for('admin'))
 
+@app.route('/add-manual', methods=['POST'])
+def add_manual():
+    import re
+    from werkzeug.utils import secure_filename
+    
+    title = request.form.get('title')
+    description = request.form.get('description')
+    content = request.form.get('content')
+    
+    if not title or not description or not content:
+        flash('All fields except image are required', 'error')
+        return redirect(url_for('admin'))
+    
+    try:
+        # Generate slug from title
+        slug = re.sub(r'[^\w\s-]', '', title.lower())
+        slug = re.sub(r'[-\s]+', '-', slug).strip('-')
+        
+        # Check if slug already exists
+        conn = get_db_connection()
+        existing = conn.execute('SELECT id FROM tutorials WHERE slug = ?', (slug,)).fetchone()
+        if existing:
+            conn.close()
+            flash(f'A tutorial with similar title already exists', 'error')
+            return redirect(url_for('admin'))
+        
+        # Handle image upload
+        image_path = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                filename = secure_filename(f"{slug}.{file.filename.rsplit('.', 1)[1].lower()}")
+                save_path = os.path.join('static', 'images', 'tutorial_images', filename)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                file.save(save_path)
+                image_path = f'images/tutorial_images/{filename}'
+        
+        # Create HTML file
+        html_filename = f"{slug}.html"
+        html_path = os.path.join('templates', 'tutorials', html_filename)
+        os.makedirs(os.path.dirname(html_path), exist_ok=True)
+        
+        tutorial_template = f"""
+{{% extends "base.html" %}}
+
+{{% block content %}}
+<div class="container my-5">
+    <h1>{{{{ tutorial['title'] }}}}</h1>
+    {{% if tutorial['image_path'] %}}
+    <img src="{{{{ url_for('static', filename=tutorial['image_path']) }}}}" class="img-fluid mb-4" alt="{{{{ tutorial['title'] }}}}">
+    {{% endif %}}
+    <div class="tutorial-content">
+        {content}
+    </div>
+    <a href="{{{{ url_for('index') }}}}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{{% endblock %}}
+"""
+        
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(tutorial_template)
+        
+        # Insert into database
+        conn.execute(
+            'INSERT INTO tutorials (title, description, slug, image_path, html_filename) VALUES (?, ?, ?, ?, ?)',
+            (title, description, slug, image_path, html_filename)
+        )
+        conn.commit()
+        conn.close()
+        
+        flash(f'Tutorial "{title}" added successfully!', 'success')
+        
+    except Exception as e:
+        flash(f'Error adding tutorial: {str(e)}', 'error')
+    
+    return redirect(url_for('admin'))
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

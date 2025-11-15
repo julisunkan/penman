@@ -23,6 +23,35 @@
         </div>
     </div>
     
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Add Tutorial Manually</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_manual') }}" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="manual_title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="manual_title" name="title" placeholder="Tutorial Title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="manual_description" class="form-label">Description</label>
+                    <textarea class="form-control" id="manual_description" name="description" rows="3" placeholder="Brief description of the tutorial" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="manual_content" class="form-label">HTML Content</label>
+                    <textarea class="form-control" id="manual_content" name="content" rows="10" placeholder="<p>Your HTML content here...</p>" required></textarea>
+                    <div class="form-text">Enter the HTML content for the tutorial body.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="manual_image" class="form-label">Tutorial Image (optional)</label>
+                    <input type="file" class="form-control" id="manual_image" name="image" accept="image/*">
+                    <div class="form-text">Upload an image for the tutorial card.</div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Tutorial</button>
+            </form>
+        </div>
+    </div>
+    
     <h2 class="mb-3">Existing Tutorials</h2>
     
     {% if tutorials %}
