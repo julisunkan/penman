@@ -59,6 +59,32 @@ def edit(tutorial_id):
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
+        html_content = request.form.get('html_content', '')
+        
+        tutorial = conn.execute('SELECT * FROM tutorials WHERE id = ?', (tutorial_id,)).fetchone()
+        
+        if tutorial and html_content:
+            html_file_path = os.path.join('templates', 'tutorials', tutorial['html_filename'])
+            
+            tutorial_template = f"""
+{{% extends "base.html" %}}
+
+{{% block content %}}
+<div class="container my-5">
+    <h1>{{{{ tutorial['title'] }}}}</h1>
+    {{% if tutorial['image_path'] %}}
+    <img src="{{{{ url_for('static', filename=tutorial['image_path']) }}}}" class="img-fluid mb-4" alt="{{{{ tutorial['title'] }}}}">
+    {{% endif %}}
+    <div class="tutorial-content">
+        {html_content}
+    </div>
+    <a href="{{{{ url_for('index') }}}}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{{% endblock %}}
+"""
+            
+            with open(html_file_path, 'w', encoding='utf-8') as f:
+                f.write(tutorial_template)
         
         conn.execute('UPDATE tutorials SET title = ?, description = ? WHERE id = ?',
                     (title, description, tutorial_id))
@@ -75,7 +101,17 @@ def edit(tutorial_id):
         flash('Tutorial not found', 'error')
         return redirect(url_for('admin'))
     
-    return render_template('edit.html', tutorial=tutorial)
+    html_content = ''
+    html_file_path = os.path.join('templates', 'tutorials', tutorial['html_filename'])
+    if os.path.exists(html_file_path):
+        with open(html_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            import re
+            match = re.search(r'<div class="tutorial-content">(.*?)</div>\s*<a href=', content, re.DOTALL)
+            if match:
+                html_content = match.group(1).strip()
+    
+    return render_template('edit.html', tutorial=tutorial, html_content=html_content)
 
 @app.route('/delete/<int:tutorial_id>', methods=['POST'])
 def delete(tutorial_id):
